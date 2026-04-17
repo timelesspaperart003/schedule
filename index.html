@@ -438,6 +438,7 @@
       <span class="week-label" id="weekLabel"></span>
       <button onclick="changeWeek(1)" title="下一週">▶</button>
     </div>
+    <button class="btn-header" onclick="exportHTML()" title="下載目前班表為 HTML 檔案">⤓ 匯出 HTML</button>
     <button class="btn-header" onclick="resetToDefault()" title="還原預設資料">↺ 還原預設</button>
   </div>
 </header>
@@ -690,6 +691,75 @@ function closeModal() { document.getElementById('editModal').classList.remove('a
 
 document.getElementById('editModal').addEventListener('click', function(e) { if(e.target===this) closeModal(); });
 document.addEventListener('keydown', function(e) { if(e.key==='Escape') closeModal(); });
+
+function exportHTML() {
+  // Read the current page's full HTML source
+  // Then replace the DEFAULT_DATA block with current scheduleData
+  const fullHTML = document.documentElement.outerHTML;
+
+  // Build new DEFAULT_DATA string from current scheduleData
+  let lines = [];
+  const sortedKeys = Object.keys(scheduleData).sort((a, b) => {
+    const order = ['early','t1','t2','t3','t4','t5','t6'];
+    const dayOrder = ['一','二','三','四','五','六','日'];
+    const [aSlot, aDay] = [a.split('-')[0], a.split('-')[1]];
+    const [bSlot, bDay] = [b.split('-')[0], b.split('-')[1]];
+    const si = order.indexOf(aSlot) - order.indexOf(bSlot);
+    return si !== 0 ? si : dayOrder.indexOf(aDay) - dayOrder.indexOf(bDay);
+  });
+
+  sortedKeys.forEach(key => {
+    const d = scheduleData[key];
+    const cutStr = (d.cut||[]).map(p => `{name:'${p.name}',note:'${p.note}'}`).join(',');
+    const printStr = (d.print||[]).map(p => `{name:'${p.name}',note:'${p.note}'}`).join(',');
+    lines.push(`  '${key}': { cut: [${cutStr}], print: [${printStr}] },`);
+  });
+
+  const newDefault = `const DEFAULT_DATA = {\n${lines.join('\n')}\n};`;
+
+  // Replace the old DEFAULT_DATA block
+  const replaced = fullHTML.replace(
+    /const DEFAULT_DATA = \{[\s\S]*?\};/,
+    newDefault
+  );
+
+  // Build full document
+  const output = `<!DOCTYPE html>\n<html lang="zh-TW">${replaced.replace(/^<html[^>]*>/, '')}</html>`;
+
+  // Remove any localStorage reference so fresh load uses new DEFAULT_DATA
+  const finalOutput = output.replace(
+    /function loadData\(\) \{[\s\S]*?\}/,
+    `function loadData() {\n  const s = localStorage.getItem('scheduleData_v3');\n  scheduleData = s ? JSON.parse(s) : JSON.parse(JSON.stringify(DEFAULT_DATA));\n}`
+  );
+
+  // Download
+  const blob = new Blob([finalOutput], { type: 'text/html; charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = '排班表.html';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+
+  // Show confirmation
+  showToast('已匯出！將下載的檔案推上 GitHub 即可更新。');
+}
+
+function showToast(msg) {
+  const t = document.createElement('div');
+  t.textContent = msg;
+  Object.assign(t.style, {
+    position: 'fixed', bottom: '24px', left: '50%', transform: 'translateX(-50%)',
+    background: 'var(--text)', color: '#fff', padding: '10px 22px',
+    borderRadius: '8px', fontSize: '13px', fontWeight: '500',
+    boxShadow: '0 4px 16px rgba(0,0,0,.15)', zIndex: '9999',
+    animation: 'modalIn .2s ease', fontFamily: "'Noto Sans TC', sans-serif"
+  });
+  document.body.appendChild(t);
+  setTimeout(() => { t.style.opacity = '0'; t.style.transition = 'opacity .3s'; setTimeout(() => t.remove(), 300); }, 3000);
+}
 
 init();
 </script>
