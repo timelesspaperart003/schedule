@@ -148,6 +148,9 @@
   .notes-section { margin-top: 20px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 22px; box-shadow: var(--shadow-sm); }
   .notes-title { font-size: 13px; font-weight: 700; color: var(--text-secondary); margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
   .notes-content { font-size: 13px; line-height: 1.8; color: var(--text-muted); }
+
+  /* Mobile schedule - hidden on desktop */
+  .mobile-schedule { display: none; }
   @media (max-width: 768px) {
     .app-header { padding: 12px 16px; flex-wrap: wrap; gap: 8px; }
     .header-left { gap: 10px; }
@@ -170,7 +173,7 @@
     .schedule-wrapper { padding: 12px 8px 30px; }
 
     /* Hide desktop grid, show mobile view */
-    .schedule-grid { display: none !important; }
+    #scheduleGrid { display: none !important; }
     .mobile-schedule { display: block !important; }
 
     .notes-section { margin-top: 16px; padding: 12px 16px; }
@@ -186,7 +189,6 @@
   }
 
   /* Mobile schedule styles */
-  .mobile-schedule { display: none; }
 
   .mobile-day-nav {
     display: flex; align-items: center; gap: 8px;
