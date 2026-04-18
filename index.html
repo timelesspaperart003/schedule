@@ -62,8 +62,11 @@
   .person-chip.active .dot { border: 1.5px solid #fff; }
   .person-chip .dot { width: 8px; height: 8px; border-radius: 50%; }
 
-  .shift-cell.dimmed { opacity: 0.15; pointer-events: none; }
+  .shift-cell.dimmed > * { opacity: 0.12; }
+  .shift-cell.dimmed { pointer-events: none; }
   .shift-cell.dimmed:hover { filter: none; }
+  .mobile-card.dimmed > * { opacity: 0.12; }
+  .mobile-card.dimmed { pointer-events: none; }
 
   .schedule-wrapper { padding: 24px 32px 40px; }
   .schedule-grid { display: grid; grid-template-columns: 110px repeat(7, 1fr); gap: 0; background: var(--surface); border-radius: var(--radius); overflow: visible; box-shadow: var(--shadow-lg); min-width: 980px; border: 1px solid var(--border); }
@@ -261,19 +264,62 @@
     box-shadow: var(--shadow-sm);
   }
 
-  /* Week overview - desktop-style grid with horizontal scroll */
+  /* Week overview - compact fit-on-screen grid */
   .mobile-week-grid {
-    overflow-x: auto; -webkit-overflow-scrolling: touch;
-    scrollbar-width: thin; padding-bottom: 4px;
-    background: var(--surface-2);
+    border: 1px solid var(--border);
     border-radius: var(--radius);
+    overflow: hidden;
+    background: var(--surface);
+    box-shadow: var(--shadow-sm);
   }
-  .mobile-week-grid .schedule-grid {
-    display: grid !important;
-    grid-template-columns: 80px repeat(7, minmax(110px, 1fr));
-    min-width: 860px;
-    width: max-content;
+  .mobile-week-grid .mw-table {
+    display: grid;
+    grid-template-columns: 46px repeat(7, 1fr);
+    width: 100%;
   }
+  .mw-header {
+    background: var(--surface-2); padding: 6px 2px;
+    text-align: center; font-size: 11px; font-weight: 600;
+    color: var(--text); border-bottom: 2px solid var(--border-light);
+    border-right: 1px solid var(--border);
+  }
+  .mw-header.is-today { background: var(--cut-label-bg); }
+  .mw-header .mw-h-date { font-size: 9px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; }
+  .mw-header.mw-time-hdr { font-size: 9px; color: var(--text-muted); display: flex; align-items: center; justify-content: center; }
+  .mw-time {
+    background: var(--surface-2); padding: 4px 3px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px; font-weight: 600; color: var(--text-muted);
+    text-align: center; line-height: 1.3;
+    border-right: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .mw-cell {
+    padding: 3px 2px; border-right: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    font-size: 10px; cursor: pointer;
+    min-height: 36px; display: flex; flex-direction: column;
+    gap: 1px; justify-content: center;
+  }
+  .mw-cell:active { background: var(--surface-3); }
+  .mw-cell.mw-empty { background: var(--surface-3); }
+  .mw-cell.dimmed > * { opacity: 0.12; }
+  .mw-cell.dimmed { pointer-events: none; }
+  .mw-tag {
+    display: inline-flex; align-items: center; gap: 1px;
+    padding: 1px 3px; border-radius: 2px;
+    font-size: 9px; font-weight: 600;
+    border: 1px solid; line-height: 1.2;
+    white-space: nowrap;
+  }
+  .mw-dot {
+    display: inline-block; width: 4px; height: 4px;
+    border-radius: 50%; flex-shrink: 0;
+  }
+  .mw-dot.cut { background: var(--cut-primary); }
+  .mw-dot.print { background: var(--print-primary); }
+  .mw-dot.combo { background: var(--accent); }
 </style>
 </head>
 <body>
@@ -510,35 +556,44 @@ function renderMobileDay(dates, today) {
 }
 
 function renderMobileWeek(dates, today) {
-  let h = `<div class="mobile-week-grid"><div class="schedule-grid">`;
+  let h = `<div class="mobile-week-grid"><div class="mw-table">`;
 
   // Header row
-  h += `<div class="grid-header time-col">時段</div>`;
+  h += `<div class="mw-header mw-time-hdr">時段</div>`;
   dates.forEach((date, i) => {
     const t = date.toDateString() === today.toDateString();
-    h += `<div class="grid-header${t?' is-today':''}"><div class="day-name">${DAYS[i]}${t?'<span class="today-badge">TODAY</span>':''}</div><div class="day-date">${date.getMonth()+1}/${date.getDate()}</div></div>`;
+    h += `<div class="mw-header${t?' is-today':''}"><div>${DAYS[i]}</div><div class="mw-h-date">${date.getMonth()+1}/${date.getDate()}</div></div>`;
   });
 
   // Data rows
   TIME_SLOTS.forEach(slot => {
-    h += `<div class="time-cell"><div class="time-range">${slot.label}${slot.time?'<br>~ '+slot.time:''}</div>${slot.note?`<div class="time-note">${slot.note}</div>`:''}</div>`;
-    DAYS.forEach((day, di) => {
+    const shortTime = slot.label.replace(':00','').replace(':30',':30');
+    h += `<div class="mw-time">${shortTime}</div>`;
+
+    DAYS.forEach((day) => {
       const key = `${slot.id}-${day}`, cd = scheduleData[key];
-      if (!cd) { h += `<div class="shift-cell no-shift" onclick="openEdit('${key}','${slot.label} ~ ${slot.time}','${day}')"></div>`; return; }
-      const hasCut=cd.cut?.length>0, hasPrint=cd.print?.length>0;
-      let c = `<div class="shift-cell" onclick="openEdit('${key}','${slot.label} ~ ${slot.time}','${day}')">`;
-      if (isCombo(cd)) {
-        const person=cd.cut[0], allNotes=[cd.cut[0].note,cd.print[0].note].filter(n=>n).join(', ');
-        c += `<div class="cell-combo"><div class="role-label combo">${svgCombo} 印+切</div><div class="person-tags"><span class="person-tag" style="${ps(person.name)}"><span class="pname">${person.name}</span>${allNotes?`<span class="note">${allNotes}</span><span class="tooltip">${allNotes}</span>`:''}</span></div></div>`;
-      } else if (hasCut && hasPrint) {
-        c += `<div class="cell-cut-area"><div class="role-label cut">${svgCut} 切割</div><div class="person-tags">${personTagsHTML(cd.cut)}</div></div>`;
-        c += `<div class="cell-print-area"><div class="role-label print">${svgPrint} 印+妙</div><div class="person-tags">${personTagsHTML(cd.print)}</div></div>`;
-      } else if (hasCut) {
-        c += `<div class="cell-cut-only"><div class="role-label cut">${svgCut} 切割</div><div class="person-tags">${personTagsHTML(cd.cut)}</div></div>`;
-      } else if (hasPrint) {
-        c += `<div class="cell-print-only"><div class="role-label print">${svgPrint} 印+妙</div><div class="person-tags">${personTagsHTML(cd.print)}</div></div>`;
+      const timeStr = `${slot.label} ~ ${slot.time}`;
+
+      if (!cd) {
+        h += `<div class="mw-cell mw-empty" onclick="openEdit('${key}','${timeStr}','${day}')"></div>`;
+        return;
       }
-      h += c + `</div>`;
+
+      h += `<div class="mw-cell" onclick="openEdit('${key}','${timeStr}','${day}')">`;
+      const hasCut=cd.cut?.length>0, hasPrint=cd.print?.length>0;
+
+      if (isCombo(cd)) {
+        const p = cd.cut[0];
+        h += `<span class="mw-tag" style="${ps(p.name)}"><span class="mw-dot combo"></span><span class="pname">${p.name}</span></span>`;
+      } else {
+        if (hasCut) cd.cut.forEach(p => {
+          h += `<span class="mw-tag" style="${ps(p.name)}"><span class="mw-dot cut"></span><span class="pname">${p.name}</span></span>`;
+        });
+        if (hasPrint) cd.print.forEach(p => {
+          h += `<span class="mw-tag" style="${ps(p.name)}"><span class="mw-dot print"></span><span class="pname">${p.name}</span></span>`;
+        });
+      }
+      h += `</div>`;
     });
   });
 
@@ -572,7 +627,7 @@ function toggleFilter(name) {
 }
 
 function applyFilter() {
-  // Desktop + mobile week (both use .shift-cell)
+  // Desktop grid
   document.querySelectorAll('.shift-cell').forEach(cell => {
     if (!filterPerson) { cell.classList.remove('dimmed'); return; }
     const tags = cell.querySelectorAll('.pname');
@@ -587,6 +642,14 @@ function applyFilter() {
     if (tags.length === 0) { card.classList.add('dimmed'); return; }
     const names = [...tags].map(t => t.textContent);
     names.includes(filterPerson) ? card.classList.remove('dimmed') : card.classList.add('dimmed');
+  });
+  // Mobile week cells
+  document.querySelectorAll('.mw-cell').forEach(cell => {
+    if (!filterPerson) { cell.classList.remove('dimmed'); return; }
+    const tags = cell.querySelectorAll('.pname');
+    if (tags.length === 0) { cell.classList.add('dimmed'); return; }
+    const names = [...tags].map(t => t.textContent);
+    names.includes(filterPerson) ? cell.classList.remove('dimmed') : cell.classList.add('dimmed');
   });
 }
 
