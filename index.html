@@ -267,11 +267,14 @@
   .mobile-week-grid {
     overflow-x: auto; -webkit-overflow-scrolling: touch;
     scrollbar-width: thin; padding-bottom: 4px;
+    background: var(--surface-2);
+    border-radius: var(--radius);
   }
   .mobile-week-grid .schedule-grid {
     display: grid !important;
     grid-template-columns: 80px repeat(7, minmax(110px, 1fr));
     min-width: 860px;
+    width: max-content;
   }
 </style>
 </head>
