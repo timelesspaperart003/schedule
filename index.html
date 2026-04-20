@@ -895,7 +895,6 @@ document.getElementById('saveScopeModal').addEventListener('click',function(e){i
 document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeModal();document.getElementById('saveScopeModal').classList.remove('active');}});
 
 function exportHTML(){
-  // Build new DEFAULT_DATA from current scheduleData
   let lines = [];
   const sortedKeys = Object.keys(scheduleData).sort((a,b) => {
     const order=['early','t1','t2','t3','t4','t5','t6'], dayOrder=['一','二','三','四','五','六','日'];
@@ -905,37 +904,36 @@ function exportHTML(){
   });
   sortedKeys.forEach(key => {
     const d=scheduleData[key];
-    const cs=(d.cut||[]).map(p=>`{name:'${p.name}',note:'${p.note}'}`).join(',');
-    const pstr=(d.print||[]).map(p=>`{name:'${p.name}',note:'${p.note}'}`).join(',');
-    lines.push(`  '${key}': { cut: [${cs}], print: [${pstr}] },`);
+    const cs=(d.cut||[]).map(p => '{name:\x27'+p.name+'\x27,note:\x27'+p.note+'\x27}').join(',');
+    const pt=(d.print||[]).map(p => '{name:\x27'+p.name+'\x27,note:\x27'+p.note+'\x27}').join(',');
+    lines.push('  \x27'+key+'\x27: { cut: ['+cs+'], print: ['+pt+'] },');
   });
-  const nd=`const DEFAULT_DATA = {\n${lines.join('\n')}\n};`;
+  const nd='const DEFAULT_DATA = {\n'+lines.join('\n')+'\n};';
 
-  // Fetch the original HTML source (not the rendered DOM)
-  fetch(location.href.split('?')[0])
-    .then(r => r.text())
-    .then(src => {
-      const result = src.replace(/const DEFAULT_DATA = \{[\s\S]*?\};/, nd);
-      const blob = new Blob([result], {type:'text/html;charset=utf-8'});
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
+  fetch(location.href.split('?')[0], {cache:'no-store'})
+    .then(function(r){return r.text()})
+    .then(function(src){
+      var marker1 = 'const DEFAULT_DATA = {';
+      var startIdx = src.indexOf(marker1);
+      if (startIdx === -1) { showToast('匯出失敗：找不到資料區塊'); return; }
+      var braceCount = 0, endIdx = startIdx + marker1.length - 1;
+      for (var i = endIdx; i < src.length; i++) {
+        if (src[i] === '{') braceCount++;
+        else if (src[i] === '}') { braceCount--; if (braceCount === 0) { endIdx = i; break; } }
+      }
+      var afterSemicolon = endIdx + 1;
+      if (src[afterSemicolon] === ';') afterSemicolon++;
+      var result = src.substring(0, startIdx) + nd + src.substring(afterSemicolon);
+      var blob = new Blob([result], {type:'text/html;charset=utf-8'});
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
       a.href = url; a.download = '排班表.html';
       document.body.appendChild(a); a.click();
       document.body.removeChild(a); URL.revokeObjectURL(url);
       showToast('已匯出！將下載的檔案推上 GitHub 即可更新。');
     })
-    .catch(() => {
-      // Fallback: if fetch fails (e.g. local file), use outerHTML method
-      const fullHTML = document.documentElement.outerHTML;
-      const rp = fullHTML.replace(/const DEFAULT_DATA = \{[\s\S]*?\};/, nd);
-      const out = `<!DOCTYPE html>\n<html lang="zh-TW">${rp.replace(/^<html[^>]*>/, '')}</html>`;
-      const blob = new Blob([out], {type:'text/html;charset=utf-8'});
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url; a.download = '排班表.html';
-      document.body.appendChild(a); a.click();
-      document.body.removeChild(a); URL.revokeObjectURL(url);
-      showToast('已匯出（備用模式）');
+    .catch(function(e){
+      showToast('匯出失敗：' + e.message);
     });
 }
 
