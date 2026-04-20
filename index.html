@@ -360,6 +360,14 @@
   }
   .mw-cell:active { background: var(--surface-3); }
   .mw-cell.mw-empty { background: var(--surface-3); }
+  .mw-cell.mw-combo-cell { background: #eae5ee; padding: 1px 2px 1px 6px; position: relative; }
+  .mw-cell.mw-combo-cell::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 4px;
+    background: linear-gradient(180deg, var(--cut-cell-bg) 50%, var(--print-cell-bg) 50%);
+  }
   .mw-cell.dimmed > * { opacity: 0.12; }
   .mw-cell.dimmed { pointer-events: none; }
 
@@ -368,36 +376,33 @@
     background: var(--cut-cell-bg);
     border-radius: 2px 2px 0 0;
     padding: 1px 2px;
+    flex: 1;
   }
   .mw-print-area {
     background: var(--print-cell-bg);
     border-radius: 0 0 2px 2px;
     padding: 1px 2px;
     border-top: 1px solid var(--border);
+    flex: 1;
   }
   .mw-cut-only {
     background: var(--cut-cell-bg);
     border-radius: 2px;
     padding: 1px 2px;
+    flex: 1;
   }
   .mw-print-only {
     background: var(--print-cell-bg);
     border-radius: 2px;
     padding: 1px 2px;
+    flex: 1;
   }
   .mw-combo-area {
-    background: #eae5ee;
-    border-radius: 2px;
-    padding: 1px 2px 1px 4px;
-    position: relative;
-  }
-  .mw-combo-area::before {
-    content: '';
-    position: absolute;
-    left: 0; top: 0; bottom: 0;
-    width: 3px;
-    background: linear-gradient(180deg, var(--cut-cell-bg) 50%, var(--print-cell-bg) 50%);
-    border-radius: 2px 0 0 2px;
+    padding: 0;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
   }
 
   .mw-role {
@@ -777,20 +782,24 @@ function renderMobileWeek(dates, today) {
         return;
       }
 
-      h += `<div class="mw-cell" onclick="openEdit('${templateKey}','${timeStr}','${day}',${di})">`;
       const hasCut=cd.cut?.length>0, hasPrint=cd.print?.length>0;
 
       if (isCombo(cd)) {
+        h += `<div class="mw-cell mw-combo-cell" onclick="openEdit('${templateKey}','${timeStr}','${day}',${di})">`;
         h += `<div class="mw-combo-area"><div class="mw-role combo">印+切</div>${mwPersons(cd.cut)}</div>`;
-      } else if (hasCut && hasPrint) {
-        h += `<div class="mw-cut-area"><div class="mw-role cut">切割</div>${mwPersons(cd.cut)}</div>`;
-        h += `<div class="mw-print-area"><div class="mw-role print">印+妙</div>${mwPersons(cd.print)}</div>`;
-      } else if (hasCut) {
-        h += `<div class="mw-cut-only"><div class="mw-role cut">切割</div>${mwPersons(cd.cut)}</div>`;
-      } else if (hasPrint) {
-        h += `<div class="mw-print-only"><div class="mw-role print">印+妙</div>${mwPersons(cd.print)}</div>`;
+        h += `</div>`;
+      } else {
+        h += `<div class="mw-cell" onclick="openEdit('${templateKey}','${timeStr}','${day}',${di})">`;
+        if (hasCut && hasPrint) {
+          h += `<div class="mw-cut-area"><div class="mw-role cut">切割</div>${mwPersons(cd.cut)}</div>`;
+          h += `<div class="mw-print-area"><div class="mw-role print">印+妙</div>${mwPersons(cd.print)}</div>`;
+        } else if (hasCut) {
+          h += `<div class="mw-cut-only"><div class="mw-role cut">切割</div>${mwPersons(cd.cut)}</div>`;
+        } else if (hasPrint) {
+          h += `<div class="mw-print-only"><div class="mw-role print">印+妙</div>${mwPersons(cd.print)}</div>`;
+        }
+        h += `</div>`;
       }
-      h += `</div>`;
     });
   });
 
