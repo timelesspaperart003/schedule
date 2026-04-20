@@ -823,6 +823,9 @@ function saveEdit(){
   document.querySelectorAll('#cutRows .form-row').forEach(r=>{const n=r.querySelector('[data-field="name"]').value.trim(),t=r.querySelector('[data-field="note"]').value.trim();if(n)cut.push({name:n,note:t});});
   document.querySelectorAll('#printRows .form-row').forEach(r=>{const n=r.querySelector('[data-field="name"]').value.trim(),t=r.querySelector('[data-field="note"]').value.trim();if(n)print.push({name:n,note:t});});
   const newData = (!cut.length&&!print.length) ? null : {cut,print};
+  // Store keys before closing modal
+  window._pendingSaveCell = editingCell;
+  window._pendingSaveDateKey = editingDateKey;
   closeModal();
   showSaveScope(newData);
 }
@@ -862,23 +865,25 @@ function confirmAllWithPassword() {
 
 function confirmSaveScope(scope) {
   const newData = window._pendingSave;
+  const cellKey = window._pendingSaveCell;
+  const dateKey = window._pendingSaveDateKey;
   document.getElementById('saveScopeModal').classList.remove('active');
 
   if (scope === 'all') {
-    // Update template + remove any override for this slot
-    if (newData) scheduleData[editingCell] = newData;
-    else delete scheduleData[editingCell];
-    delete overrides[editingDateKey];
+    if (newData) scheduleData[cellKey] = newData;
+    else delete scheduleData[cellKey];
+    delete overrides[dateKey];
     saveData(); saveOverrides();
   } else {
-    // Only this week: save as override
-    if (newData) overrides[editingDateKey] = newData;
-    else delete overrides[editingDateKey];
+    if (newData) overrides[dateKey] = newData;
+    else delete overrides[dateKey];
     saveOverrides();
   }
 
   renderGrid(); renderMobile(); renderLegend(); applyFilter();
   window._pendingSave = null;
+  window._pendingSaveCell = null;
+  window._pendingSaveDateKey = null;
 }
 
 function closeModal(){document.getElementById('editModal').classList.remove('active');editingCell=null;}
