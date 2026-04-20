@@ -435,8 +435,8 @@
       </div>
       <button class="btn-today" id="btnToday" onclick="goToday()" title="回到本週">TODAY</button>
     </div>
-    <button class="btn-header" onclick="exportHTML()" title="下載目前班表為 HTML 檔案">⤓ 匯出</button>
     <button class="btn-header" onclick="resetToDefault()" title="還原預設資料">↺ 還原</button>
+    <button class="btn-header" onclick="loadData()" title="重新載入雲端資料">⟳ 同步</button>
   </div>
 </header>
 <div class="legend-bar">
@@ -555,19 +555,70 @@ let scheduleData = {}, overrides = {}, currentWeekOffset = 0, editingCell = null
 let mobileDay = 0;
 const isMobile = () => window.innerWidth <= 768;
 
+const API_URL = 'https://script.google.com/macros/s/AKfycbwmXWX2WJwjnwE1wFbIX4Q736zkyl0q_PAXQHPiOmxGgobCMMZV5GCtxXY3qF0_L46AJQ/exec';
+
 function init() { 
-  loadData(); updateWeekLabel(); renderGrid(); renderMobile(); renderLegend(); updateTodayBtn(); applyFilter();
+  loadData();
   window.addEventListener('resize', () => { if(isMobile()) { renderMobile(); applyFilter(); } });
 }
-function loadData() {
-  const s = localStorage.getItem('scheduleData_v3');
-  scheduleData = s ? JSON.parse(s) : JSON.parse(JSON.stringify(DEFAULT_DATA));
-  const o = localStorage.getItem('scheduleOverrides');
-  overrides = o ? JSON.parse(o) : {};
+
+function renderAll() {
+  updateWeekLabel(); renderGrid(); renderMobile(); renderLegend(); updateTodayBtn(); applyFilter();
 }
-function saveData() { localStorage.setItem('scheduleData_v3', JSON.stringify(scheduleData)); }
-function saveOverrides() { localStorage.setItem('scheduleOverrides', JSON.stringify(overrides)); }
-function resetToDefault() { if (confirm('確定要還原為預設班表嗎？所有臨時調整也會清除。')) { scheduleData = JSON.parse(JSON.stringify(DEFAULT_DATA)); overrides = {}; saveData(); saveOverrides(); renderGrid(); renderMobile(); renderLegend(); applyFilter(); } }
+
+function loadData() {
+  // Show loading state
+  scheduleData = JSON.parse(JSON.stringify(DEFAULT_DATA));
+  overrides = {};
+  renderAll();
+  showToast('載入班表中...');
+
+  fetch(API_URL + '?action=read')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.template && Object.keys(data.template).length > 0) {
+        scheduleData = data.template;
+      }
+      if (data.overrides) {
+        overrides = data.overrides;
+      }
+      renderAll();
+    })
+    .catch(function(e) {
+      console.error('載入失敗，使用本地預設', e);
+      showToast('無法連線雲端，使用本地預設資料');
+    });
+}
+
+function apiPost(body) {
+  return fetch(API_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain' },
+    body: JSON.stringify(body)
+  }).then(function(r) { return r.json(); });
+}
+
+function saveTemplateToCloud(key, data) {
+  return apiPost({ action: 'saveTemplate', key: key, data: data });
+}
+
+function saveOverrideToCloud(dateKey, data) {
+  return apiPost({ action: 'saveOverride', dateKey: dateKey, data: data });
+}
+
+function deleteOverrideFromCloud(dateKey) {
+  return apiPost({ action: 'deleteOverride', dateKey: dateKey });
+}
+
+function resetToDefault() {
+  if (confirm('確定要還原為預設班表嗎？所有臨時調整也會清除。')) {
+    overrides = {};
+    apiPost({ action: 'resetAll' })
+      .then(function() { showToast('已清除所有臨時調整'); })
+      .catch(function() { showToast('清除失敗，請重試'); });
+    renderAll();
+  }
+}
 
 /* Get date string key for overrides: "2026-04-21" */
 function dateStr(d) { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
@@ -875,15 +926,23 @@ function confirmSaveScope(scope) {
     if (newData) scheduleData[cellKey] = newData;
     else delete scheduleData[cellKey];
     delete overrides[dateKey];
-    saveData(); saveOverrides();
+    renderAll();
+    showToast('儲存中...');
+    Promise.all([
+      saveTemplateToCloud(cellKey, newData),
+      deleteOverrideFromCloud(dateKey)
+    ]).then(function() { showToast('已更新所有週模板'); })
+      .catch(function() { showToast('儲存失敗，請重試'); });
   } else {
     if (newData) overrides[dateKey] = newData;
     else delete overrides[dateKey];
-    saveOverrides();
+    renderAll();
+    showToast('儲存中...');
+    saveOverrideToCloud(dateKey, newData)
+      .then(function() { showToast('已儲存本週調整'); })
+      .catch(function() { showToast('儲存失敗，請重試'); });
   }
 
-  renderGrid(); renderMobile(); renderLegend(); applyFilter();
-  showToast(scope === 'all' ? '已更新所有週模板' : '已儲存本週調整');
   window._pendingSave = null;
   window._pendingSaveCell = null;
   window._pendingSaveDateKey = null;
@@ -893,49 +952,6 @@ function closeModal(){document.getElementById('editModal').classList.remove('act
 document.getElementById('editModal').addEventListener('click',function(e){if(e.target===this)closeModal();});
 document.getElementById('saveScopeModal').addEventListener('click',function(e){if(e.target===this){this.classList.remove('active');window._pendingSave=null;}});
 document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeModal();document.getElementById('saveScopeModal').classList.remove('active');}});
-
-function exportHTML(){
-  let lines = [];
-  const sortedKeys = Object.keys(scheduleData).sort((a,b) => {
-    const order=['early','t1','t2','t3','t4','t5','t6'], dayOrder=['一','二','三','四','五','六','日'];
-    const[aS,aD]=[a.split('-')[0],a.split('-')[1]],[bS,bD]=[b.split('-')[0],b.split('-')[1]];
-    const si=order.indexOf(aS)-order.indexOf(bS);
-    return si!==0?si:dayOrder.indexOf(aD)-dayOrder.indexOf(bD);
-  });
-  sortedKeys.forEach(key => {
-    const d=scheduleData[key];
-    const cs=(d.cut||[]).map(p => '{name:\x27'+p.name+'\x27,note:\x27'+p.note+'\x27}').join(',');
-    const pt=(d.print||[]).map(p => '{name:\x27'+p.name+'\x27,note:\x27'+p.note+'\x27}').join(',');
-    lines.push('  \x27'+key+'\x27: { cut: ['+cs+'], print: ['+pt+'] },');
-  });
-  const nd='const DEFAULT_DATA = {\n'+lines.join('\n')+'\n};';
-
-  fetch(location.href.split('?')[0], {cache:'no-store'})
-    .then(function(r){return r.text()})
-    .then(function(src){
-      var marker1 = 'const DEFAULT_DATA = {';
-      var startIdx = src.indexOf(marker1);
-      if (startIdx === -1) { showToast('匯出失敗：找不到資料區塊'); return; }
-      var braceCount = 0, endIdx = startIdx + marker1.length - 1;
-      for (var i = endIdx; i < src.length; i++) {
-        if (src[i] === '{') braceCount++;
-        else if (src[i] === '}') { braceCount--; if (braceCount === 0) { endIdx = i; break; } }
-      }
-      var afterSemicolon = endIdx + 1;
-      if (src[afterSemicolon] === ';') afterSemicolon++;
-      var result = src.substring(0, startIdx) + nd + src.substring(afterSemicolon);
-      var blob = new Blob([result], {type:'text/html;charset=utf-8'});
-      var url = URL.createObjectURL(blob);
-      var a = document.createElement('a');
-      a.href = url; a.download = '排班表.html';
-      document.body.appendChild(a); a.click();
-      document.body.removeChild(a); URL.revokeObjectURL(url);
-      showToast('已匯出！將下載的檔案推上 GitHub 即可更新。');
-    })
-    .catch(function(e){
-      showToast('匯出失敗：' + e.message);
-    });
-}
 
 function showToast(msg){const t=document.createElement('div');t.textContent=msg;Object.assign(t.style,{position:'fixed',bottom:'24px',left:'50%',transform:'translateX(-50%)',background:'var(--text)',color:'#fff',padding:'10px 22px',borderRadius:'8px',fontSize:'13px',fontWeight:'500',boxShadow:'0 4px 16px rgba(0,0,0,.15)',zIndex:'9999',animation:'modalIn .2s ease',fontFamily:"'Noto Sans TC',sans-serif"});document.body.appendChild(t);setTimeout(()=>{t.style.opacity='0';t.style.transition='opacity .3s';setTimeout(()=>t.remove(),300);},3000);}
 
