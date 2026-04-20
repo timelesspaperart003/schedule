@@ -69,6 +69,44 @@
   .mobile-card.dimmed > * { opacity: 0.12; }
   .mobile-card.dimmed { pointer-events: none; }
 
+  .override-dot {
+    position: absolute; top: 3px; right: 4px;
+    font-size: 7px; color: var(--accent);
+    line-height: 1; z-index: 2;
+  }
+
+  /* Save scope modal */
+  .scope-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(74,69,64,.3); backdrop-filter: blur(4px);
+    z-index: 1100; align-items: center; justify-content: center;
+  }
+  .scope-overlay.active { display: flex; }
+  .scope-modal {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px; width: 340px; max-width: 90vw;
+    box-shadow: var(--shadow-lg); animation: modalIn .2s ease;
+    text-align: center; padding: 24px 20px 18px;
+  }
+  .scope-title { font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+  .scope-desc { font-size: 13px; color: var(--text-muted); margin-bottom: 18px; line-height: 1.5; }
+  .scope-btns { display: flex; flex-direction: column; gap: 8px; }
+  .scope-btn {
+    padding: 12px 16px; border-radius: var(--radius-sm);
+    border: 1px solid var(--border); background: var(--surface);
+    color: var(--text); font-family: inherit;
+    font-size: 14px; font-weight: 600; cursor: pointer;
+    transition: all .15s; display: flex; align-items: center;
+    justify-content: center; gap: 8px;
+  }
+  .scope-btn:hover { background: var(--surface-3); }
+  .scope-btn .scope-icon { font-size: 16px; }
+  .scope-btn.scope-all {
+    background: var(--cut-primary); border-color: var(--cut-primary);
+    color: #fff;
+  }
+  .scope-btn.scope-all:hover { background: #6a7f90; }
+
   .schedule-wrapper { padding: 24px 32px 40px; }
   .schedule-grid { display: grid; grid-template-columns: 110px repeat(7, 1fr); gap: 0; background: var(--surface); border-radius: var(--radius); overflow: visible; box-shadow: var(--shadow-lg); min-width: 980px; border: 1px solid var(--border); }
   .grid-header { background: var(--surface-2); padding: 14px 8px; text-align: center; font-weight: 600; font-size: 14px; border-bottom: 2px solid var(--border-light); border-right: 1px solid var(--border); }
@@ -408,6 +446,20 @@
     <div class="modal-footer"><button class="btn" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="saveEdit()">儲存</button></div>
   </div>
 </div>
+<div class="scope-overlay" id="saveScopeModal">
+  <div class="scope-modal">
+    <div class="scope-title">儲存範圍</div>
+    <div class="scope-desc">這次修改要套用到哪裡？</div>
+    <div class="scope-btns">
+      <button class="scope-btn" onclick="confirmSaveScope('this')">
+        <span class="scope-icon">📅</span>僅這週
+      </button>
+      <button class="scope-btn scope-all" onclick="confirmSaveScope('all')">
+        <span class="scope-icon">🔄</span>所有週（更新模板）
+      </button>
+    </div>
+  </div>
+</div>
 <script>
 const DAYS = ['一','二','三','四','五','六','日'];
 const TIME_SLOTS = [
@@ -473,7 +525,7 @@ const DEFAULT_DATA = {
   't6-五': { cut: [{name:'真',note:'到1840'},{name:'任',note:''}], print: [{name:'任',note:''}] },
 };
 
-let scheduleData = {}, currentWeekOffset = 0, editingCell = null, filterPerson = null;
+let scheduleData = {}, overrides = {}, currentWeekOffset = 0, editingCell = null, editingDateKey = null, filterPerson = null;
 let mobileDay = 0;
 const isMobile = () => window.innerWidth <= 768;
 
@@ -481,9 +533,26 @@ function init() {
   loadData(); updateWeekLabel(); renderGrid(); renderMobile(); renderLegend(); updateTodayBtn(); applyFilter();
   window.addEventListener('resize', () => { if(isMobile()) { renderMobile(); applyFilter(); } });
 }
-function loadData() { const s = localStorage.getItem('scheduleData_v3'); scheduleData = s ? JSON.parse(s) : JSON.parse(JSON.stringify(DEFAULT_DATA)); }
-function saveData() { localStorage.setItem('scheduleData_v3', JSON.stringify(scheduleData)); }
-function resetToDefault() { if (confirm('確定要還原為預設班表嗎？')) { scheduleData = JSON.parse(JSON.stringify(DEFAULT_DATA)); saveData(); renderGrid(); renderLegend(); } }
+function loadData() {
+  const s = localStorage.getItem('scheduleData_v4');
+  scheduleData = s ? JSON.parse(s) : JSON.parse(JSON.stringify(DEFAULT_DATA));
+  const o = localStorage.getItem('scheduleOverrides_v4');
+  overrides = o ? JSON.parse(o) : {};
+}
+function saveData() { localStorage.setItem('scheduleData_v4', JSON.stringify(scheduleData)); }
+function saveOverrides() { localStorage.setItem('scheduleOverrides_v4', JSON.stringify(overrides)); }
+function resetToDefault() { if (confirm('確定要還原為預設班表嗎？所有臨時調整也會清除。')) { scheduleData = JSON.parse(JSON.stringify(DEFAULT_DATA)); overrides = {}; saveData(); saveOverrides(); renderGrid(); renderMobile(); renderLegend(); } }
+
+/* Get date string key for overrides: "2026-04-21" */
+function dateStr(d) { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+
+/* Get cell data: override first, then template */
+function getCellData(slotId, day, dates, dayIndex) {
+  const dk = `${dateStr(dates[dayIndex])}_${slotId}`;
+  if (overrides[dk]) return { data: overrides[dk], isOverride: true, dateKey: dk };
+  const tk = `${slotId}-${day}`;
+  return { data: scheduleData[tk] || null, isOverride: false, dateKey: dk };
+}
 function getWeekDates(offset) { const now=new Date(),dow=now.getDay(),mo=new Date(now); mo.setDate(now.getDate()+(dow===0?-6:1-dow)+offset*7); return Array.from({length:7},(_,i)=>{const d=new Date(mo);d.setDate(mo.getDate()+i);return d;}); }
 function updateWeekLabel() { const d=getWeekDates(currentWeekOffset),f=d=>`${d.getMonth()+1}/${d.getDate()}`; document.getElementById('weekLabel').textContent=`${d[0].getFullYear()} ${f(d[0])} — ${f(d[6])}`; }
 function updateTodayBtn() { const b=document.getElementById('btnToday'); currentWeekOffset===0?b.classList.add('is-current-week'):b.classList.remove('is-current-week'); }
@@ -507,10 +576,13 @@ function renderGrid() {
   TIME_SLOTS.forEach(slot=>{
     g.innerHTML+=`<div class="time-cell"><div class="time-range">${slot.label}${slot.time?'<br>~ '+slot.time:''}</div>${slot.note?`<div class="time-note">${slot.note}</div>`:''}</div>`;
     DAYS.forEach((day,di)=>{
-      const key=`${slot.id}-${day}`,cd=scheduleData[key];
-      if(!cd){g.innerHTML+=`<div class="shift-cell no-shift" onclick="openEdit('${key}','${slot.label} ~ ${slot.time}','${day}')"></div>`;return;}
+      const cell=getCellData(slot.id,day,dates,di);
+      const cd=cell.data, dk=cell.dateKey;
+      const templateKey=`${slot.id}-${day}`;
+      if(!cd){g.innerHTML+=`<div class="shift-cell no-shift" onclick="openEdit('${templateKey}','${slot.label} ~ ${slot.time}','${day}',${di})"></div>`;return;}
       const hasCut=cd.cut?.length>0,hasPrint=cd.print?.length>0;
-      let h=`<div class="shift-cell" onclick="openEdit('${key}','${slot.label} ~ ${slot.time}','${day}')">`;
+      const overrideTag=cell.isOverride?'<span class="override-dot" title="臨時調整">●</span>':'';
+      let h=`<div class="shift-cell" onclick="openEdit('${templateKey}','${slot.label} ~ ${slot.time}','${day}',${di})">${overrideTag}`;
 
       if(isCombo(cd)){
         const person=cd.cut[0],allNotes=[cd.cut[0].note,cd.print[0].note].filter(n=>n).join(', ');
@@ -523,8 +595,6 @@ function renderGrid() {
         h+=`<div class="cell-cut-only"><div class="role-label cut">${svgCut} 切割</div><div class="person-tags">${personTagsHTML(cd.cut)}</div></div>`;
       } else if(hasPrint){
         h+=`<div class="cell-print-only"><div class="role-label print">${svgPrint} 印+妙</div><div class="person-tags">${personTagsHTML(cd.print)}</div></div>`;
-      } else {
-        h+=`<div style="color:var(--text-dim);font-size:12px;display:flex;align-items:center;justify-content:center;height:100%">點擊編輯</div>`;
       }
       g.innerHTML+=h+`</div>`;
     });
@@ -571,10 +641,13 @@ function renderMobileDay(dates, today) {
 
   const day = DAYS[mobileDay];
   TIME_SLOTS.forEach(slot => {
-    const key = `${slot.id}-${day}`, cd = scheduleData[key];
+    const templateKey = `${slot.id}-${day}`;
+    const cell = getCellData(slot.id, day, dates, mobileDay);
+    const cd = cell.data;
     const timeStr = `${slot.label} ~ ${slot.time}`;
-    h += `<div class="mobile-card" data-key="${key}" onclick="openEdit('${key}','${timeStr}','${day}')">`;
-    h += `<div class="mobile-card-header"><span>${slot.label} ~ ${slot.time}</span>${slot.note?`<span class="time-note-m">${slot.note}</span>`:''}</div>`;
+    const overrideTag = cell.isOverride ? ' <span style="color:var(--accent);font-size:9px">●</span>' : '';
+    h += `<div class="mobile-card" onclick="openEdit('${templateKey}','${timeStr}','${day}',${mobileDay})">`;
+    h += `<div class="mobile-card-header"><span>${slot.label} ~ ${slot.time}${overrideTag}</span>${slot.note?`<span class="time-note-m">${slot.note}</span>`:''}</div>`;
     if (!cd) {
       h += `<div class="mobile-card-empty">無排班</div>`;
     } else {
@@ -616,16 +689,18 @@ function renderMobileWeek(dates, today) {
     const shortTime = slot.label.replace(':00','').replace(':30',':30');
     h += `<div class="mw-time">${shortTime}</div>`;
 
-    DAYS.forEach(day => {
-      const key = `${slot.id}-${day}`, cd = scheduleData[key];
+    DAYS.forEach((day, di) => {
+      const templateKey = `${slot.id}-${day}`;
+      const cell = getCellData(slot.id, day, dates, di);
+      const cd = cell.data;
       const timeStr = `${slot.label} ~ ${slot.time}`;
 
       if (!cd) {
-        h += `<div class="mw-cell mw-empty" onclick="openEdit('${key}','${timeStr}','${day}')"></div>`;
+        h += `<div class="mw-cell mw-empty" onclick="openEdit('${templateKey}','${timeStr}','${day}',${di})"></div>`;
         return;
       }
 
-      h += `<div class="mw-cell" onclick="openEdit('${key}','${timeStr}','${day}')">`;
+      h += `<div class="mw-cell" onclick="openEdit('${templateKey}','${timeStr}','${day}',${di})">`;
       const hasCut=cd.cut?.length>0, hasPrint=cd.print?.length>0;
 
       if (isCombo(cd)) {
@@ -698,8 +773,13 @@ function applyFilter() {
   });
 }
 
-function openEdit(key,timeLabel,day){
-  editingCell=key;const data=scheduleData[key]||{cut:[],print:[]};
+function openEdit(templateKey,timeLabel,day,dayIndex){
+  editingCell=templateKey;
+  const dates=getWeekDates(currentWeekOffset);
+  const slotId=templateKey.split('-')[0];
+  const cell=getCellData(slotId,day,dates,dayIndex);
+  editingDateKey=cell.dateKey;
+  const data=cell.data||{cut:[],print:[]};
   document.getElementById('modalTitle').textContent=`編輯｜週${day}・${timeLabel}`;
   let h=`<div class="form-section"><div class="form-section-title cut">${svgCut} 切割人員</div><div id="cutRows">`;
   (data.cut||[]).forEach((p,i)=>{h+=pRow('cut',i,p.name,p.note);});
@@ -718,13 +798,42 @@ function saveEdit(){
   const cut=[],print=[];
   document.querySelectorAll('#cutRows .form-row').forEach(r=>{const n=r.querySelector('[data-field="name"]').value.trim(),t=r.querySelector('[data-field="note"]').value.trim();if(n)cut.push({name:n,note:t});});
   document.querySelectorAll('#printRows .form-row').forEach(r=>{const n=r.querySelector('[data-field="name"]').value.trim(),t=r.querySelector('[data-field="note"]').value.trim();if(n)print.push({name:n,note:t});});
-  if(!cut.length&&!print.length)delete scheduleData[editingCell];else scheduleData[editingCell]={cut,print};
-  saveData();renderGrid();renderMobile();renderLegend();closeModal();applyFilter();
+  const newData = (!cut.length&&!print.length) ? null : {cut,print};
+  closeModal();
+  showSaveScope(newData);
+}
+
+function showSaveScope(newData) {
+  const overlay = document.getElementById('saveScopeModal');
+  overlay.classList.add('active');
+  window._pendingSave = newData;
+}
+
+function confirmSaveScope(scope) {
+  const newData = window._pendingSave;
+  document.getElementById('saveScopeModal').classList.remove('active');
+
+  if (scope === 'all') {
+    // Update template + remove any override for this slot
+    if (newData) scheduleData[editingCell] = newData;
+    else delete scheduleData[editingCell];
+    delete overrides[editingDateKey];
+    saveData(); saveOverrides();
+  } else {
+    // Only this week: save as override
+    if (newData) overrides[editingDateKey] = newData;
+    else delete overrides[editingDateKey];
+    saveOverrides();
+  }
+
+  renderGrid(); renderMobile(); renderLegend(); applyFilter();
+  window._pendingSave = null;
 }
 
 function closeModal(){document.getElementById('editModal').classList.remove('active');editingCell=null;}
 document.getElementById('editModal').addEventListener('click',function(e){if(e.target===this)closeModal();});
-document.addEventListener('keydown',function(e){if(e.key==='Escape')closeModal();});
+document.getElementById('saveScopeModal').addEventListener('click',function(e){if(e.target===this){this.classList.remove('active');window._pendingSave=null;}});
+document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeModal();document.getElementById('saveScopeModal').classList.remove('active');}});
 
 function exportHTML(){
   const fullHTML=document.documentElement.outerHTML;let lines=[];
