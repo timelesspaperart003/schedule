@@ -107,6 +107,23 @@
   }
   .scope-btn.scope-all:hover { background: #6a7f90; }
 
+  .scope-all-section { display: flex; flex-direction: column; gap: 6px; }
+  .scope-pw-row { display: flex; gap: 6px; }
+  .scope-pw-input {
+    flex: 1; padding: 8px 12px; border-radius: var(--radius-xs);
+    border: 1px solid var(--border); background: var(--surface-2);
+    color: var(--text); font-family: inherit; font-size: 13px;
+  }
+  .scope-pw-input:focus { outline: none; border-color: var(--cut-primary); }
+  .scope-pw-confirm {
+    padding: 8px 16px; border-radius: var(--radius-xs);
+    border: none; background: var(--cut-primary); color: #fff;
+    font-family: inherit; font-size: 13px; font-weight: 600;
+    cursor: pointer; transition: background .15s;
+  }
+  .scope-pw-confirm:hover { background: #6a7f90; }
+  .scope-pw-error { font-size: 12px; color: var(--danger); text-align: center; animation: modalIn .2s ease; }
+
   .schedule-wrapper { padding: 24px 32px 40px; }
   .schedule-grid { display: grid; grid-template-columns: 110px repeat(7, 1fr); gap: 0; background: var(--surface); border-radius: var(--radius); overflow: visible; box-shadow: var(--shadow-lg); min-width: 980px; border: 1px solid var(--border); }
   .grid-header { background: var(--surface-2); padding: 14px 8px; text-align: center; font-weight: 600; font-size: 14px; border-bottom: 2px solid var(--border-light); border-right: 1px solid var(--border); }
@@ -454,9 +471,16 @@
       <button class="scope-btn" onclick="confirmSaveScope('this')">
         <span class="scope-icon">📅</span>僅這週
       </button>
-      <button class="scope-btn scope-all" onclick="confirmSaveScope('all')">
-        <span class="scope-icon">🔄</span>所有週（更新模板）
-      </button>
+      <div class="scope-all-section">
+        <button class="scope-btn scope-all" id="scopeAllBtn" onclick="showScopePassword()">
+          <span class="scope-icon">🔄</span>所有週（更新模板）
+        </button>
+        <div class="scope-pw-row" id="scopePwRow" style="display:none;">
+          <input type="password" class="scope-pw-input" id="scopePwInput" placeholder="請輸入管理密碼" autocomplete="off" onkeydown="if(event.key==='Enter')confirmAllWithPassword()">
+          <button class="scope-pw-confirm" onclick="confirmAllWithPassword()">確認</button>
+        </div>
+        <div class="scope-pw-error" id="scopePwError" style="display:none;">密碼錯誤</div>
+      </div>
     </div>
   </div>
 </div>
@@ -807,6 +831,33 @@ function showSaveScope(newData) {
   const overlay = document.getElementById('saveScopeModal');
   overlay.classList.add('active');
   window._pendingSave = newData;
+  document.getElementById('scopePwRow').style.display = 'none';
+  document.getElementById('scopePwError').style.display = 'none';
+  document.getElementById('scopePwInput').value = '';
+}
+
+function showScopePassword() {
+  document.getElementById('scopePwRow').style.display = 'flex';
+  document.getElementById('scopePwError').style.display = 'none';
+  document.getElementById('scopePwInput').value = '';
+  setTimeout(() => document.getElementById('scopePwInput').focus(), 50);
+}
+
+function confirmAllWithPassword() {
+  const input = document.getElementById('scopePwInput').value;
+  async function sha256(msg) {
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(msg));
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+  }
+  sha256(input).then(hash => {
+    if (hash === 'b1b3773a05c0ed0176787a4f1574ff0075f7521e00f1100c18f68338772c404c') {
+      confirmSaveScope('all');
+    } else {
+      document.getElementById('scopePwError').style.display = 'block';
+      document.getElementById('scopePwInput').value = '';
+      document.getElementById('scopePwInput').focus();
+    }
+  });
 }
 
 function confirmSaveScope(scope) {
