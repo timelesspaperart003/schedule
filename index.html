@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- 排班表 v20260418-fix2 -->
+<!-- 排班表 v20260420 -->
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
@@ -264,58 +264,103 @@
     box-shadow: var(--shadow-sm);
   }
 
-  /* Week overview - compact fit-on-screen grid */
+  /* Week overview - mirrors desktop layout, compressed to fit mobile */
   .mobile-week-grid {
     border: 1px solid var(--border);
-    border-radius: var(--radius);
+    border-radius: var(--radius-sm);
     overflow: hidden;
     background: var(--surface);
     box-shadow: var(--shadow-sm);
   }
   .mobile-week-grid .mw-table {
     display: grid;
-    grid-template-columns: 46px repeat(7, 1fr);
+    grid-template-columns: 38px repeat(7, 1fr);
     width: 100%;
   }
   .mw-header {
-    background: var(--surface-2); padding: 6px 2px;
-    text-align: center; font-size: 11px; font-weight: 600;
+    background: var(--surface-2); padding: 5px 1px;
+    text-align: center; font-size: 10px; font-weight: 600;
     color: var(--text); border-bottom: 2px solid var(--border-light);
     border-right: 1px solid var(--border);
   }
   .mw-header.is-today { background: var(--cut-label-bg); }
-  .mw-header .mw-h-date { font-size: 9px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; }
-  .mw-header.mw-time-hdr { font-size: 9px; color: var(--text-muted); display: flex; align-items: center; justify-content: center; }
+  .mw-header .mw-h-date { font-size: 8px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; }
+  .mw-header.mw-time-hdr { font-size: 7px; color: var(--text-muted); display: flex; align-items: center; justify-content: center; }
   .mw-time {
-    background: var(--surface-2); padding: 4px 3px;
+    background: var(--surface-2); padding: 2px 1px;
     font-family: 'JetBrains Mono', monospace;
-    font-size: 9px; font-weight: 600; color: var(--text-muted);
-    text-align: center; line-height: 1.3;
+    font-size: 7px; font-weight: 600; color: var(--text-muted);
+    text-align: center; line-height: 1.2;
     border-right: 1px solid var(--border);
     border-bottom: 1px solid var(--border);
     display: flex; align-items: center; justify-content: center;
   }
   .mw-cell {
-    padding: 3px 2px; border-right: 1px solid var(--border);
+    padding: 2px 1px; border-right: 1px solid var(--border);
     border-bottom: 1px solid var(--border);
-    font-size: 10px; cursor: pointer;
-    min-height: 36px; display: flex; flex-direction: column;
-    gap: 1px; justify-content: center;
+    cursor: pointer; display: flex; flex-direction: column;
+    gap: 1px;
   }
   .mw-cell:active { background: var(--surface-3); }
   .mw-cell.mw-empty { background: var(--surface-3); }
   .mw-cell.dimmed > * { opacity: 0.12; }
   .mw-cell.dimmed { pointer-events: none; }
-  .mw-tag {
-    display: inline-flex; align-items: center; gap: 2px;
-    padding: 1px 4px; border-radius: 3px;
-    font-size: 9px; font-weight: 600;
-    line-height: 1.3; white-space: nowrap;
-    color: var(--text);
+
+  /* Mini role sections inside mw-cell */
+  .mw-cut-area {
+    background: var(--cut-cell-bg);
+    border-radius: 2px 2px 0 0;
+    padding: 1px 2px;
   }
-  .mw-tag.mw-cut { background: var(--cut-cell-bg); border: 1px solid var(--cut-label-bg); }
-  .mw-tag.mw-print { background: var(--print-cell-bg); border: 1px solid var(--print-label-bg); }
-  .mw-tag.mw-combo { background: #eae5ee; border: 1px solid #d8d0e2; }
+  .mw-print-area {
+    background: var(--print-cell-bg);
+    border-radius: 0 0 2px 2px;
+    padding: 1px 2px;
+    border-top: 1px solid var(--border);
+  }
+  .mw-cut-only {
+    background: var(--cut-cell-bg);
+    border-radius: 2px;
+    padding: 1px 2px;
+  }
+  .mw-print-only {
+    background: var(--print-cell-bg);
+    border-radius: 2px;
+    padding: 1px 2px;
+  }
+  .mw-combo-area {
+    background: #eae5ee;
+    border-radius: 2px;
+    padding: 1px 2px 1px 4px;
+    position: relative;
+  }
+  .mw-combo-area::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: linear-gradient(180deg, var(--cut-cell-bg) 50%, var(--print-cell-bg) 50%);
+    border-radius: 2px 0 0 2px;
+  }
+
+  .mw-role {
+    font-size: 6px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.5px; margin-bottom: 1px; line-height: 1;
+  }
+  .mw-role.cut { color: var(--cut-label-text); }
+  .mw-role.print { color: var(--print-label-text); }
+  .mw-role.combo { color: #6b5888; }
+
+  .mw-person {
+    display: inline-block;
+    padding: 0px 2px; border-radius: 2px;
+    font-size: 8px; font-weight: 600;
+    border: 1px solid; line-height: 1.3;
+    margin: 0 1px 1px 0;
+  }
+  .mw-note {
+    font-size: 6px; font-weight: 400; opacity: .6;
+  }
 </style>
 </head>
 <body>
@@ -378,7 +423,6 @@ const PERSON_COLORS = {
   '黑': { bg: '#d6dde6', border: '#a8b5c4', text: '#4e6070' },
   '安': { bg: '#d4e4da', border: '#a4c8b0', text: '#456856' },
   '妤': { bg: '#e6d6e0', border: '#c8a4b8', text: '#6e4860' },
-  '小妤': { bg: '#ddd4e6', border: '#b8a4cc', text: '#584870' },
   '尤': { bg: '#e6dcd0', border: '#ccb89c', text: '#6e5838' },
   '真': { bg: '#cce4dc', border: '#96c8b8', text: '#386858' },
   '任': { bg: '#e6d2d0', border: '#cca8a4', text: '#704240' },
@@ -390,28 +434,28 @@ const DEFAULT_DATA = {
   'early-四': { cut: [{name:'黑',note:'主要'}], print: [{name:'黑',note:''}] },
   'early-日': { cut: [{name:'黑',note:''}], print: [{name:'黑',note:''}] },
   't1-一': { cut: [{name:'安',note:''}], print: [{name:'黑',note:''}] },
-  't1-二': { cut: [{name:'小妤',note:''},{name:'黑',note:''}], print: [{name:'黑',note:''}] },
+  't1-二': { cut: [{name:'妤',note:''},{name:'黑',note:''}], print: [{name:'黑',note:''}] },
   't1-三': { cut: [{name:'安',note:''}], print: [{name:'黑',note:''}] },
   't1-四': { cut: [{name:'安',note:''}], print: [{name:'黑',note:''}] },
   't1-五': { cut: [{name:'安',note:'預'}], print: [{name:'尤',note:''}] },
   't1-六': { cut: [{name:'妤',note:'主要, 0830上班'}], print: [{name:'妤',note:''}] },
   't1-日': { cut: [{name:'黑',note:''}], print: [{name:'黑',note:''}] },
   't2-一': { cut: [{name:'妤',note:''},{name:'黑',note:''}], print: [{name:'黑',note:''}] },
-  't2-二': { cut: [{name:'小妤',note:''},{name:'黑',note:''}], print: [{name:'黑',note:''}] },
+  't2-二': { cut: [{name:'妤',note:''},{name:'黑',note:''}], print: [{name:'黑',note:''}] },
   't2-三': { cut: [{name:'安',note:''}], print: [{name:'黑',note:''}] },
   't2-四': { cut: [{name:'安',note:''},{name:'尤',note:'預'}], print: [{name:'黑',note:''}] },
   't2-五': { cut: [{name:'安',note:'預'}], print: [{name:'尤',note:''}] },
   't2-六': { cut: [{name:'妤',note:'主要'}], print: [{name:'妤',note:''}] },
   't2-日': { cut: [{name:'黑',note:''}], print: [{name:'黑',note:''}] },
   't3-一': { cut: [{name:'妤',note:''},{name:'黑',note:''}], print: [{name:'妤',note:''}] },
-  't3-二': { cut: [{name:'黑',note:''}], print: [{name:'小妤',note:'+代工'}] },
+  't3-二': { cut: [{name:'黑',note:''}], print: [{name:'妤',note:'+代工'}] },
   't3-三': { cut: [{name:'安',note:''}], print: [{name:'黑',note:''}] },
   't3-四': { cut: [{name:'安',note:''},{name:'尤',note:'預'}], print: [{name:'黑',note:''}] },
   't3-五': { cut: [{name:'安',note:'預'}], print: [{name:'尤',note:''}] },
   't3-六': { cut: [{name:'妤',note:'主要'}], print: [{name:'妤',note:''}] },
   't3-日': { cut: [{name:'黑',note:''}], print: [{name:'黑',note:''}] },
   't4-一': { cut: [{name:'黑',note:''}], print: [{name:'妤',note:''}] },
-  't4-二': { cut: [{name:'黑',note:''}], print: [{name:'小妤',note:''},{name:'尤',note:'妤到1530'}] },
+  't4-二': { cut: [{name:'黑',note:''}], print: [{name:'妤',note:''},{name:'尤',note:'妤到1530'}] },
   't4-三': { cut: [{name:'真',note:''},{name:'黑',note:''}], print: [{name:'尤',note:''}] },
   't4-四': { cut: [{name:'尤',note:''},{name:'安',note:'預'}], print: [{name:'黑',note:''},{name:'妤',note:'1620上班'}] },
   't4-五': { cut: [{name:'真',note:'1620上班'}], print: [{name:'尤',note:''}] },
@@ -554,19 +598,25 @@ function renderMobileDay(dates, today) {
 function renderMobileWeek(dates, today) {
   let h = `<div class="mobile-week-grid"><div class="mw-table">`;
 
-  // Header row
   h += `<div class="mw-header mw-time-hdr">時段</div>`;
   dates.forEach((date, i) => {
     const t = date.toDateString() === today.toDateString();
     h += `<div class="mw-header${t?' is-today':''}"><div>${DAYS[i]}</div><div class="mw-h-date">${date.getMonth()+1}/${date.getDate()}</div></div>`;
   });
 
-  // Data rows
+  function mwPersons(people) {
+    return people.map(p => {
+      const c = PERSON_COLORS[p.name];
+      const st = c ? `background:${c.bg};border-color:${c.border};color:${c.text}` : '';
+      return `<span class="mw-person" style="${st}"><span class="pname">${p.name}</span>${p.note?`<span class="mw-note">${p.note}</span>`:''}</span>`;
+    }).join('');
+  }
+
   TIME_SLOTS.forEach(slot => {
     const shortTime = slot.label.replace(':00','').replace(':30',':30');
     h += `<div class="mw-time">${shortTime}</div>`;
 
-    DAYS.forEach((day) => {
+    DAYS.forEach(day => {
       const key = `${slot.id}-${day}`, cd = scheduleData[key];
       const timeStr = `${slot.label} ~ ${slot.time}`;
 
@@ -579,15 +629,14 @@ function renderMobileWeek(dates, today) {
       const hasCut=cd.cut?.length>0, hasPrint=cd.print?.length>0;
 
       if (isCombo(cd)) {
-        const p = cd.cut[0];
-        h += `<span class="mw-tag mw-combo"><span class="pname">${p.name}</span></span>`;
-      } else {
-        if (hasCut) cd.cut.forEach(p => {
-          h += `<span class="mw-tag mw-cut"><span class="pname">${p.name}</span></span>`;
-        });
-        if (hasPrint) cd.print.forEach(p => {
-          h += `<span class="mw-tag mw-print"><span class="pname">${p.name}</span></span>`;
-        });
+        h += `<div class="mw-combo-area"><div class="mw-role combo">印+切</div>${mwPersons(cd.cut)}</div>`;
+      } else if (hasCut && hasPrint) {
+        h += `<div class="mw-cut-area"><div class="mw-role cut">切割</div>${mwPersons(cd.cut)}</div>`;
+        h += `<div class="mw-print-area"><div class="mw-role print">印+妙</div>${mwPersons(cd.print)}</div>`;
+      } else if (hasCut) {
+        h += `<div class="mw-cut-only"><div class="mw-role cut">切割</div>${mwPersons(cd.cut)}</div>`;
+      } else if (hasPrint) {
+        h += `<div class="mw-print-only"><div class="mw-role print">印+妙</div>${mwPersons(cd.print)}</div>`;
       }
       h += `</div>`;
     });
