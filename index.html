@@ -895,29 +895,7 @@ document.getElementById('saveScopeModal').addEventListener('click',function(e){i
 document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeModal();document.getElementById('saveScopeModal').classList.remove('active');}});
 
 function exportHTML(){
-  // Clean dynamic content before capturing HTML
-  const grid = document.getElementById('scheduleGrid');
-  const mobile = document.getElementById('mobileSchedule');
-  const legend = document.getElementById('legendPeople');
-  const weekLabel = document.getElementById('weekLabel');
-  const gridBak = grid.innerHTML;
-  const mobileBak = mobile.innerHTML;
-  const legendBak = legend.innerHTML;
-  const weekBak = weekLabel.textContent;
-  grid.innerHTML = '';
-  mobile.innerHTML = '';
-  legend.innerHTML = '';
-  weekLabel.textContent = '';
-
-  const fullHTML = document.documentElement.outerHTML;
-
-  // Restore
-  grid.innerHTML = gridBak;
-  mobile.innerHTML = mobileBak;
-  legend.innerHTML = legendBak;
-  weekLabel.textContent = weekBak;
-
-  // Build new DEFAULT_DATA
+  // Build new DEFAULT_DATA from current scheduleData
   let lines = [];
   const sortedKeys = Object.keys(scheduleData).sort((a,b) => {
     const order=['early','t1','t2','t3','t4','t5','t6'], dayOrder=['一','二','三','四','五','六','日'];
@@ -932,20 +910,33 @@ function exportHTML(){
     lines.push(`  '${key}': { cut: [${cs}], print: [${pstr}] },`);
   });
   const nd=`const DEFAULT_DATA = {\n${lines.join('\n')}\n};`;
-  const rp=fullHTML.replace(/const DEFAULT_DATA = \{[\s\S]*?\};/,nd);
-  const out=`<!DOCTYPE html>\n<!-- 排班表 v20260420 -->\n<html lang="zh-TW">${rp.replace(/^<html[^>]*>/,'')}</html>`;
-  const fin=out.replace(
-    /function loadData\(\) \{[\s\S]*?\}/,
-    `function loadData() {\n  const s = localStorage.getItem('scheduleData_v3');\n  scheduleData = s ? JSON.parse(s) : JSON.parse(JSON.stringify(DEFAULT_DATA));\n  const o = localStorage.getItem('scheduleOverrides');\n  overrides = o ? JSON.parse(o) : {};\n}`
-  );
 
-  const blob=new Blob([fin],{type:'text/html;charset=utf-8'});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');
-  a.href=url; a.download='排班表.html';
-  document.body.appendChild(a); a.click();
-  document.body.removeChild(a); URL.revokeObjectURL(url);
-  showToast('已匯出！將下載的檔案推上 GitHub 即可更新。');
+  // Fetch the original HTML source (not the rendered DOM)
+  fetch(location.href.split('?')[0])
+    .then(r => r.text())
+    .then(src => {
+      const result = src.replace(/const DEFAULT_DATA = \{[\s\S]*?\};/, nd);
+      const blob = new Blob([result], {type:'text/html;charset=utf-8'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = '排班表.html';
+      document.body.appendChild(a); a.click();
+      document.body.removeChild(a); URL.revokeObjectURL(url);
+      showToast('已匯出！將下載的檔案推上 GitHub 即可更新。');
+    })
+    .catch(() => {
+      // Fallback: if fetch fails (e.g. local file), use outerHTML method
+      const fullHTML = document.documentElement.outerHTML;
+      const rp = fullHTML.replace(/const DEFAULT_DATA = \{[\s\S]*?\};/, nd);
+      const out = `<!DOCTYPE html>\n<html lang="zh-TW">${rp.replace(/^<html[^>]*>/, '')}</html>`;
+      const blob = new Blob([out], {type:'text/html;charset=utf-8'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = '排班表.html';
+      document.body.appendChild(a); a.click();
+      document.body.removeChild(a); URL.revokeObjectURL(url);
+      showToast('已匯出（備用模式）');
+    });
 }
 
 function showToast(msg){const t=document.createElement('div');t.textContent=msg;Object.assign(t.style,{position:'fixed',bottom:'24px',left:'50%',transform:'translateX(-50%)',background:'var(--text)',color:'#fff',padding:'10px 22px',borderRadius:'8px',fontSize:'13px',fontWeight:'500',boxShadow:'0 4px 16px rgba(0,0,0,.15)',zIndex:'9999',animation:'modalIn .2s ease',fontFamily:"'Noto Sans TC',sans-serif"});document.body.appendChild(t);setTimeout(()=>{t.style.opacity='0';t.style.transition='opacity .3s';setTimeout(()=>t.remove(),300);},3000);}
