@@ -125,6 +125,155 @@
   }
   .scope-pw-confirm:hover { background: #6a7f90; }
   .scope-pw-error { font-size: 12px; color: var(--danger); text-align: center; animation: modalIn .2s ease; }
+  .scope-btn-back {
+    background: none; border: none; color: var(--text-muted);
+    font-family: inherit; font-size: 12px; cursor: pointer;
+    margin-top: 8px; padding: 4px 0; transition: color .15s;
+  }
+  .scope-btn-back:hover { color: var(--text); }
+
+  .scope-divider {
+    text-align: center; margin: 10px 0 8px;
+    position: relative; font-size: 11px; color: var(--text-dim);
+  }
+  .scope-divider::before { content: ''; position: absolute; left: 0; top: 50%; width: 100%; height: 1px; background: var(--border); }
+  .scope-divider span { background: var(--surface); padding: 0 10px; position: relative; }
+
+  .scope-name-btns {
+    display: flex; flex-wrap: wrap; gap: 6px; justify-content: center;
+  }
+  .scope-name-btn {
+    padding: 6px 14px; border-radius: 20px;
+    border: 1px solid var(--border); background: var(--surface-2);
+    color: var(--text); font-family: inherit; font-size: 13px;
+    font-weight: 600; cursor: pointer; transition: all .15s;
+  }
+  .scope-name-btn:hover { background: var(--surface-3); border-color: var(--border-light); }
+
+  /* History tabs */
+  .history-tabs {
+    display: flex; border-bottom: 1px solid var(--border);
+  }
+  .history-tab {
+    flex: 1; padding: 10px; border: none; background: none;
+    font-family: inherit; font-size: 13px; font-weight: 500;
+    color: var(--text-muted); cursor: pointer; transition: all .15s;
+    border-bottom: 2px solid transparent;
+  }
+  .history-tab.active { color: var(--text); border-bottom-color: var(--cut-primary); }
+  .history-tab:hover { color: var(--text); }
+  .pending-count {
+    background: var(--danger); color: #fff; font-size: 10px;
+    padding: 1px 6px; border-radius: 10px; font-weight: 700;
+    margin-left: 4px;
+  }
+  .pending-count:empty { display: none; }
+
+  /* Pending card */
+  .pending-card {
+    padding: 12px; border: 1px solid var(--border);
+    border-radius: var(--radius-sm); margin-bottom: 8px;
+    background: var(--surface-2);
+  }
+  .pending-card-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 6px;
+  }
+  .pending-card-actions { display: flex; gap: 6px; }
+  .btn-approve {
+    padding: 4px 12px; border-radius: var(--radius-xs); border: none;
+    background: var(--success); color: #fff; font-family: inherit;
+    font-size: 12px; font-weight: 600; cursor: pointer;
+  }
+  .btn-approve:hover { opacity: .85; }
+  .btn-reject {
+    padding: 4px 12px; border-radius: var(--radius-xs);
+    border: 1px solid var(--danger); background: none;
+    color: var(--danger); font-family: inherit;
+    font-size: 12px; font-weight: 600; cursor: pointer;
+  }
+  .btn-reject:hover { background: #fef2f2; }
+
+  /* Pending badge on cells */
+  .pending-dot {
+    position: absolute; top: 2px; right: 3px;
+    background: #f59e0b; color: #fff;
+    font-size: 7px; font-weight: 700;
+    padding: 1px 4px; border-radius: 3px;
+    line-height: 1; z-index: 2;
+  }
+
+  /* Review modal */
+  .review-section { margin-bottom: 14px; }
+  .review-label { font-size: 11px; font-weight: 700; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px; }
+  .review-compare {
+    display: grid; grid-template-columns: 1fr auto 1fr; gap: 8px;
+    align-items: center; margin-bottom: 14px;
+  }
+  .review-box {
+    padding: 10px; border-radius: var(--radius-sm);
+    border: 1px solid var(--border); font-size: 12px; line-height: 1.6;
+  }
+  .review-box.current { background: var(--surface-2); }
+  .review-box.proposed { background: #fef9ee; border-color: #f59e0b; }
+  .review-box-title { font-size: 10px; font-weight: 700; color: var(--text-muted); margin-bottom: 4px; }
+  .review-arrow { font-size: 18px; color: var(--text-dim); text-align: center; }
+  .review-submitter { font-size: 13px; color: var(--text-secondary); margin-bottom: 12px; }
+  .review-submitter strong { color: var(--text); }
+  .review-auth { margin-top: 12px; }
+  .review-pw-row { display: flex; gap: 8px; margin-bottom: 8px; }
+  .review-actions { display: flex; gap: 8px; }
+  .review-pw-error { font-size: 12px; color: var(--danger); margin-top: 4px; display: none; }
+  .review-edit-link {
+    display: block; text-align: center; margin-top: 12px;
+    font-size: 12px; color: var(--text-muted); cursor: pointer;
+    border: none; background: none; font-family: inherit;
+    text-decoration: underline;
+  }
+  .review-edit-link:hover { color: var(--text); }
+
+  /* History log cards */
+  .log-item {
+    padding: 12px 14px; margin-bottom: 8px;
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    background: var(--surface-2); font-size: 13px;
+  }
+  .log-item:last-child { margin-bottom: 0; }
+  .log-meta {
+    display: flex; gap: 6px; align-items: center;
+    margin-bottom: 8px; flex-wrap: wrap;
+  }
+  .log-user {
+    background: var(--accent); color: #fff;
+    padding: 2px 10px; border-radius: 10px;
+    font-size: 12px; font-weight: 600;
+  }
+  .log-time { font-size: 11px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; margin-left: auto; }
+  .log-scope {
+    font-size: 10px; font-weight: 600; padding: 2px 8px;
+    border-radius: 3px;
+  }
+  .log-scope.all, .log-scope:not(.this) { color: var(--cut-label-text); background: var(--cut-cell-bg); border: 1px solid var(--cut-label-bg); }
+  .log-scope.this { color: var(--print-label-text); background: var(--print-cell-bg); border: 1px solid var(--print-label-bg); }
+  .log-key {
+    font-size: 12px; font-weight: 600; color: var(--text);
+    background: var(--surface); padding: 2px 8px;
+    border-radius: 3px; border: 1px solid var(--border);
+  }
+  .log-change-card {
+    display: grid; grid-template-columns: 1fr auto 1fr; gap: 6px;
+    align-items: center;
+    background: var(--surface); border-radius: var(--radius-xs);
+    padding: 8px 10px; border: 1px solid var(--border);
+  }
+  .log-change-old, .log-change-new {
+    font-size: 11px; line-height: 1.5; color: var(--text-secondary);
+    word-break: break-all;
+  }
+  .log-change-old { opacity: .6; }
+  .log-change-new { font-weight: 500; color: var(--text); }
+  .log-arrow { color: var(--text-dim); font-size: 14px; text-align: center; flex-shrink: 0; }
+  .log-empty { text-align: center; color: var(--text-muted); padding: 30px; }
 
   .schedule-wrapper { padding: 24px 32px 40px; }
   .schedule-grid { display: grid; grid-template-columns: 110px repeat(7, 1fr); gap: 0; background: var(--surface); border-radius: var(--radius); overflow: visible; box-shadow: var(--shadow-lg); min-width: 980px; border: 1px solid var(--border); }
@@ -442,6 +591,7 @@
     </div>
     <button class="btn-header" onclick="resetToDefault()" title="還原預設資料">↺ 還原</button>
     <button class="btn-header" onclick="loadData()" title="重新載入雲端資料">⟳ 同步</button>
+    <button class="btn-header" onclick="openHistoryAuth()" title="修改記錄">📋 記錄</button>
   </div>
 </header>
 <div class="legend-bar">
@@ -470,24 +620,70 @@
     <div class="modal-footer"><button class="btn" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="saveEdit()">儲存</button></div>
   </div>
 </div>
+<div class="modal-overlay" id="reviewModal">
+  <div class="modal" style="width:480px;">
+    <div class="modal-header"><h3 id="reviewTitle">待審核修改</h3><button class="modal-close" onclick="closeReview()">✕</button></div>
+    <div class="modal-body" id="reviewBody"></div>
+  </div>
+</div>
 <div class="scope-overlay" id="saveScopeModal">
   <div class="scope-modal">
-    <div class="scope-title">儲存範圍</div>
-    <div class="scope-desc">這次修改要套用到哪裡？</div>
-    <div class="scope-btns">
-      <button class="scope-btn" onclick="confirmSaveScope('this')">
-        <span class="scope-icon">📅</span>僅這週
-      </button>
-      <div class="scope-all-section">
-        <button class="scope-btn scope-all" id="scopeAllBtn" onclick="showScopePassword()">
+    <div class="scope-title" id="scopeTitle">儲存班表修改</div>
+    <div class="scope-desc" id="scopeStepDesc">選擇修改範圍</div>
+    <!-- Step 1: Choose scope -->
+    <div id="scopeStep1">
+      <div class="scope-btns">
+        <button class="scope-btn" onclick="chooseSaveScope('this')">
+          <span class="scope-icon">📅</span>僅這週
+        </button>
+        <button class="scope-btn scope-all" onclick="chooseSaveScope('all')">
           <span class="scope-icon">🔄</span>所有週（更新模板）
         </button>
-        <div class="scope-pw-row" id="scopePwRow" style="display:none;">
-          <input type="password" class="scope-pw-input" id="scopePwInput" placeholder="請輸入管理密碼" autocomplete="off" onkeydown="if(event.key==='Enter')confirmAllWithPassword()">
-          <button class="scope-pw-confirm" onclick="confirmAllWithPassword()">確認</button>
-        </div>
-        <div class="scope-pw-error" id="scopePwError" style="display:none;">密碼錯誤</div>
       </div>
+    </div>
+    <!-- Step 2: Identity -->
+    <div id="scopeStep2" style="display:none;">
+      <div class="scope-desc" style="margin-bottom:8px;font-size:12px;color:var(--text-muted);">管理員/操作員請輸入密碼，員工請選擇或輸入姓名</div>
+      <div class="scope-pw-row" style="margin-bottom:10px;">
+        <input type="password" class="scope-pw-input" id="scopePwInput" placeholder="管理員/操作員密碼" autocomplete="off" onkeydown="if(event.key==='Enter')confirmWithPassword()">
+        <button class="scope-pw-confirm" onclick="confirmWithPassword()">確認</button>
+      </div>
+      <div class="scope-divider"><span>或 選擇員工身份</span></div>
+      <div class="scope-name-btns" id="staffNameBtns"></div>
+      <div class="scope-pw-row" style="margin-top:6px;">
+        <input type="text" class="scope-pw-input" id="staffNameInput" placeholder="輸入其他姓名" autocomplete="off" onkeydown="if(event.key==='Enter')confirmAsStaff()">
+        <button class="scope-pw-confirm" onclick="confirmAsStaff()">提交</button>
+      </div>
+      <div class="scope-pw-error" id="scopePwError" style="display:none;"></div>
+      <button class="scope-btn-back" onclick="backToStep1()">← 返回</button>
+    </div>
+  </div>
+</div>
+<!-- History Auth Modal -->
+<div class="scope-overlay" id="historyAuthModal">
+  <div class="scope-modal">
+    <div class="scope-title">查看修改記錄</div>
+    <div class="scope-desc">請輸入管理員或操作員密碼</div>
+    <div class="scope-pw-row">
+      <input type="password" class="scope-pw-input" id="historyPwInput" placeholder="密碼" autocomplete="off" onkeydown="if(event.key==='Enter')confirmHistoryAuth()">
+      <button class="scope-pw-confirm" onclick="confirmHistoryAuth()">確認</button>
+    </div>
+    <div class="scope-pw-error" id="historyPwError" style="display:none;">權限不足</div>
+  </div>
+</div>
+<!-- History + Review Modal -->
+<div class="modal-overlay" id="historyModal">
+  <div class="modal" style="width:600px;">
+    <div class="modal-header">
+      <h3 id="historyTitle">管理面板</h3>
+      <button class="modal-close" onclick="closeHistory()">✕</button>
+    </div>
+    <div class="history-tabs">
+      <button class="history-tab active" id="tabPending" onclick="switchHistoryTab('pending')">⏳ 待審核 <span class="pending-count" id="pendingCount"></span></button>
+      <button class="history-tab" id="tabLog" onclick="switchHistoryTab('log')">📋 修改記錄</button>
+    </div>
+    <div class="modal-body" id="historyBody" style="max-height:60vh;overflow-y:auto;">
+      <div style="text-align:center;color:var(--text-muted);padding:20px;">載入中...</div>
     </div>
   </div>
 </div>
@@ -584,9 +780,8 @@ function loadData() {
       if (data.template && Object.keys(data.template).length > 0) {
         scheduleData = data.template;
       }
-      if (data.overrides) {
-        overrides = data.overrides;
-      }
+      if (data.overrides) overrides = data.overrides;
+      if (data.pending) pendingData = data.pending;
       renderAll();
     })
     .catch(function(e) {
@@ -664,7 +859,8 @@ function renderGrid() {
       if(!cd){g.innerHTML+=`<div class="shift-cell no-shift" onclick="openEdit('${templateKey}','${slot.label} ~ ${slot.time}','${day}',${di})"></div>`;return;}
       const hasCut=cd.cut?.length>0,hasPrint=cd.print?.length>0;
       const overrideTag=cell.isOverride?'<span class="override-dot" title="臨時調整">●</span>':'';
-      let h=`<div class="shift-cell" onclick="openEdit('${templateKey}','${slot.label} ~ ${slot.time}','${day}',${di})">${overrideTag}`;
+      const pendingTag=hasPending(templateKey,dk)?'<span class="pending-dot">待審核</span>':'';
+      let h=`<div class="shift-cell" onclick="openEdit('${templateKey}','${slot.label} ~ ${slot.time}','${day}',${di})">${overrideTag}${pendingTag}`;
 
       if(isCombo(cd)){
         const person=cd.cut[0],allNotes=[cd.cut[0].note,cd.print[0].note].filter(n=>n).join(', ');
@@ -861,21 +1057,143 @@ function applyFilter() {
 
 function openEdit(templateKey,timeLabel,day,dayIndex){
   editingCell=templateKey;
-  const dates=getWeekDates(currentWeekOffset);
-  const slotId=templateKey.split('-')[0];
-  const cell=getCellData(slotId,day,dates,dayIndex);
+  var dates=getWeekDates(currentWeekOffset);
+  var slotId=templateKey.split('-')[0];
+  var cell=getCellData(slotId,day,dates,dayIndex);
   editingDateKey=cell.dateKey;
-  const data=cell.data||{cut:[],print:[]};
-  document.getElementById('modalTitle').textContent=`編輯｜週${day}・${timeLabel}`;
-  let h=`<div class="form-section"><div class="form-section-title cut">${svgCut} 切割人員</div><div id="cutRows">`;
-  (data.cut||[]).forEach((p,i)=>{h+=pRow('cut',i,p.name,p.note);});
-  h+=`</div><button class="btn-add-person" onclick="addPerson('cut')">+ 新增切割人員</button></div>`;
-  h+=`<div class="form-section"><div class="form-section-title print">${svgPrint} 印+妙人員</div><div id="printRows">`;
-  (data.print||[]).forEach((p,i)=>{h+=pRow('print',i,p.name,p.note);});
-  h+=`</div><button class="btn-add-person" onclick="addPerson('print')">+ 新增印+妙人員</button></div>`;
+
+  // Check if this cell has pending changes
+  var cellPending = getPendingForCell(templateKey, cell.dateKey);
+  if (cellPending.length > 0) {
+    openReview(templateKey, timeLabel, day, dayIndex, cellPending, cell.data);
+    return;
+  }
+
+  // Normal edit
+  var data=cell.data||{cut:[],print:[]};
+  document.getElementById('modalTitle').textContent='編輯｜週'+day+'・'+timeLabel;
+  var h='<div class="form-section"><div class="form-section-title cut">'+svgCut+' 切割人員</div><div id="cutRows">';
+  (data.cut||[]).forEach(function(p,i){h+=pRow('cut',i,p.name,p.note);});
+  h+='</div><button class="btn-add-person" onclick="addPerson(\'cut\')">+ 新增切割人員</button></div>';
+  h+='<div class="form-section"><div class="form-section-title print">'+svgPrint+' 印+妙人員</div><div id="printRows">';
+  (data.print||[]).forEach(function(p,i){h+=pRow('print',i,p.name,p.note);});
+  h+='</div><button class="btn-add-person" onclick="addPerson(\'print\')">+ 新增印+妙人員</button></div>';
   document.getElementById('modalBody').innerHTML=h;
   document.getElementById('editModal').classList.add('active');
 }
+
+function getPendingForCell(templateKey, dateKey) {
+  var matches = [];
+  for (var i = 0; i < pendingData.length; i++) {
+    if (pendingData[i].templateKey === templateKey || pendingData[i].dateKey === dateKey) {
+      matches.push(pendingData[i]);
+    }
+  }
+  return matches;
+}
+
+function openReview(templateKey, timeLabel, day, dayIndex, cellPendings, currentData) {
+  document.getElementById('reviewTitle').textContent = '待審核｜週' + day + '・' + timeLabel;
+  var h = '';
+
+  for (var i = 0; i < cellPendings.length; i++) {
+    var p = cellPendings[i];
+    var oldStr = currentData ? formatCellPreview(currentData) : '（無排班）';
+    var newStr = p.data ? formatCellPreview(p.data) : '（清除）';
+
+    h += '<div class="review-section">';
+    h += '<div class="review-submitter">👤 <strong>' + p.user + '</strong> 提交了 <span class="log-scope ' + (p.scope === '所有週' ? 'all' : 'this') + '">' + p.scope + '</span> 修改</div>';
+
+    h += '<div class="review-compare">';
+    h += '<div class="review-box current"><div class="review-box-title">目前</div>' + formatCellDetail(currentData) + '</div>';
+    h += '<div class="review-arrow">→</div>';
+    h += '<div class="review-box proposed"><div class="review-box-title">修改為</div>' + formatCellDetail(p.data) + '</div>';
+    h += '</div>';
+
+    h += '<div class="review-auth">';
+    h += '<div class="review-label">輸入密碼審核</div>';
+    h += '<div class="review-pw-row">';
+    h += '<input type="password" class="scope-pw-input" id="reviewPw_' + i + '" placeholder="管理員/操作員密碼" onkeydown="if(event.key===\'Enter\')reviewAction(\'' + p.id + '\',' + i + ',\'approve\')">';
+    h += '</div>';
+    h += '<div class="review-actions">';
+    h += '<button class="btn-approve" onclick="reviewAction(\'' + p.id + '\',' + i + ',\'approve\')">✓ 批准</button>';
+    h += '<button class="btn-reject" onclick="reviewAction(\'' + p.id + '\',' + i + ',\'reject\')">✕ 拒絕</button>';
+    h += '</div>';
+    h += '<div class="review-pw-error" id="reviewErr_' + i + '">密碼錯誤或權限不足</div>';
+    h += '</div></div>';
+  }
+
+  h += '<button class="review-edit-link" onclick="closeReview();openEditDirect(\'' + templateKey + '\',\'' + timeLabel + '\',\'' + day + '\',' + dayIndex + ')">忽略待審核，直接編輯此格</button>';
+
+  document.getElementById('reviewBody').innerHTML = h;
+  document.getElementById('reviewModal').classList.add('active');
+}
+
+function formatCellDetail(data) {
+  if (!data) return '<span style="color:var(--text-dim)">（無排班）</span>';
+  var h = '';
+  if (data.cut && data.cut.length) {
+    h += '<div style="margin-bottom:3px"><span style="color:var(--cut-label-text);font-weight:600;font-size:11px">切割：</span>';
+    h += data.cut.map(function(p){ return '<span style="font-weight:600">' + p.name + '</span>' + (p.note ? '<span style="font-size:10px;opacity:.6"> ' + p.note + '</span>' : ''); }).join('、');
+    h += '</div>';
+  }
+  if (data.print && data.print.length) {
+    h += '<div><span style="color:var(--print-label-text);font-weight:600;font-size:11px">印+妙：</span>';
+    h += data.print.map(function(p){ return '<span style="font-weight:600">' + p.name + '</span>' + (p.note ? '<span style="font-size:10px;opacity:.6"> ' + p.note + '</span>' : ''); }).join('、');
+    h += '</div>';
+  }
+  return h || '<span style="color:var(--text-dim)">（空）</span>';
+}
+
+function reviewAction(pendingId, idx, action) {
+  var pwInput = document.getElementById('reviewPw_' + idx);
+  var errEl = document.getElementById('reviewErr_' + idx);
+  var pw = pwInput.value;
+  if (!pw) { errEl.style.display = 'block'; errEl.textContent = '請輸入密碼'; return; }
+
+  sha256(pw).then(function(hash) {
+    var approver = null;
+    for (var i = 0; i < ADMINS.length; i++) {
+      if (ADMINS[i].hash === hash) { approver = ADMINS[i].name; break; }
+    }
+    if (!approver) { errEl.style.display = 'block'; errEl.textContent = '密碼錯誤或權限不足'; pwInput.value = ''; return; }
+
+    errEl.style.display = 'none';
+    if (action === 'approve') {
+      showToast('批准中...');
+      apiPost({ action: 'approvePending', id: pendingId, approver: approver })
+        .then(function(resp) {
+          if (resp.success) { pendingData = pendingData.filter(function(p){ return p.id !== pendingId; }); closeReview(); loadData(); showToast(approver + ' 已批准'); }
+        }).catch(function() { showToast('操作失敗'); });
+    } else {
+      showToast('拒絕中...');
+      apiPost({ action: 'rejectPending', id: pendingId, approver: approver })
+        .then(function(resp) {
+          if (resp.success) { pendingData = pendingData.filter(function(p){ return p.id !== pendingId; }); closeReview(); renderAll(); showToast(approver + ' 已拒絕'); }
+        }).catch(function() { showToast('操作失敗'); });
+    }
+  });
+}
+
+function openEditDirect(templateKey, timeLabel, day, dayIndex) {
+  editingCell = templateKey;
+  var dates = getWeekDates(currentWeekOffset);
+  var slotId = templateKey.split('-')[0];
+  var cell = getCellData(slotId, day, dates, dayIndex);
+  editingDateKey = cell.dateKey;
+  var data = cell.data || {cut:[], print:[]};
+  document.getElementById('modalTitle').textContent = '編輯｜週' + day + '・' + timeLabel;
+  var h = '<div class="form-section"><div class="form-section-title cut">' + svgCut + ' 切割人員</div><div id="cutRows">';
+  (data.cut||[]).forEach(function(p,i){h+=pRow('cut',i,p.name,p.note);});
+  h += '</div><button class="btn-add-person" onclick="addPerson(\'cut\')">+ 新增切割人員</button></div>';
+  h += '<div class="form-section"><div class="form-section-title print">' + svgPrint + ' 印+妙人員</div><div id="printRows">';
+  (data.print||[]).forEach(function(p,i){h+=pRow('print',i,p.name,p.note);});
+  h += '</div><button class="btn-add-person" onclick="addPerson(\'print\')">+ 新增印+妙人員</button></div>';
+  document.getElementById('modalBody').innerHTML = h;
+  document.getElementById('editModal').classList.add('active');
+}
+
+function closeReview() { document.getElementById('reviewModal').classList.remove('active'); }
 
 function pRow(role,i,name,note){return `<div class="form-row" data-role="${role}"><input class="form-input" type="text" placeholder="姓名" value="${name||''}" data-field="name"><input class="form-input note-input" type="text" placeholder="備註（選填）" value="${note||''}" data-field="note"><button class="btn-remove" onclick="this.parentElement.remove()">✕</button></div>`;}
 function addPerson(role){const c=document.getElementById(role+'Rows');c.insertAdjacentHTML('beforeend',pRow(role,0,'',''));c.lastElementChild.querySelector('input').focus();}
@@ -892,75 +1210,245 @@ function saveEdit(){
   showSaveScope(newData);
 }
 
+let pendingData = [];
+
 function showSaveScope(newData) {
-  const overlay = document.getElementById('saveScopeModal');
-  overlay.classList.add('active');
+  document.getElementById('saveScopeModal').classList.add('active');
   window._pendingSave = newData;
-  document.getElementById('scopePwRow').style.display = 'none';
+  window._pendingScope = null;
+  document.getElementById('scopeStep1').style.display = 'block';
+  document.getElementById('scopeStep2').style.display = 'none';
+  document.getElementById('scopeStepDesc').textContent = '選擇修改範圍';
   document.getElementById('scopePwError').style.display = 'none';
-  document.getElementById('scopePwInput').value = '';
 }
 
-function showScopePassword() {
-  document.getElementById('scopePwRow').style.display = 'flex';
-  document.getElementById('scopePwError').style.display = 'none';
+function chooseSaveScope(scope) {
+  window._pendingScope = scope;
+  document.getElementById('scopeStep1').style.display = 'none';
+  document.getElementById('scopeStep2').style.display = 'block';
+  document.getElementById('scopeStepDesc').textContent = '確認身份';
   document.getElementById('scopePwInput').value = '';
-  setTimeout(() => document.getElementById('scopePwInput').focus(), 50);
-}
-
-function confirmAllWithPassword() {
-  const input = document.getElementById('scopePwInput').value;
-  async function sha256(msg) {
-    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(msg));
-    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+  document.getElementById('staffNameInput').value = '';
+  document.getElementById('scopePwError').style.display = 'none';
+  var names = Object.keys(PERSON_COLORS);
+  var btnsHtml = '';
+  for (var i = 0; i < names.length; i++) {
+    btnsHtml += '<button class="scope-name-btn" onclick="confirmAsStaffName(\x27' + names[i] + '\x27)">' + names[i] + '</button>';
   }
-  sha256(input).then(hash => {
-    if (hash === '2eef75362c5d08a31384dedf71617445c31969f405ad2d554da73ad6fc5fe327') {
-      confirmSaveScope('all');
+  document.getElementById('staffNameBtns').innerHTML = btnsHtml;
+  setTimeout(function(){ document.getElementById('scopePwInput').focus(); }, 50);
+}
+
+function backToStep1() {
+  document.getElementById('scopeStep1').style.display = 'block';
+  document.getElementById('scopeStep2').style.display = 'none';
+  document.getElementById('scopeStepDesc').textContent = '選擇修改範圍';
+}
+
+var ADMINS = [
+  { name: '管理員', hash: '2eef75362c5d08a31384dedf71617445c31969f405ad2d554da73ad6fc5fe327' },
+  { name: '操作員A', hash: '6e110f529869586eaeb5839280b75ff1bbb90d7dc9c9410c2ad4c9bec1d9a866' },
+  { name: '操作員B', hash: 'f2a5cec9c8580cea2119fe434ace37d925b629e636073d79bc22661a97382c28' }
+];
+
+function sha256(msg) {
+  return crypto.subtle.digest('SHA-256', new TextEncoder().encode(msg))
+    .then(function(buf) { return Array.from(new Uint8Array(buf)).map(function(b){ return b.toString(16).padStart(2,'0'); }).join(''); });
+}
+
+function confirmWithPassword() {
+  var input = document.getElementById('scopePwInput').value;
+  if (!input) return;
+  sha256(input).then(function(hash) {
+    var matched = null;
+    for (var i = 0; i < ADMINS.length; i++) {
+      if (ADMINS[i].hash === hash) { matched = ADMINS[i].name; break; }
+    }
+    if (matched) {
+      document.getElementById('saveScopeModal').classList.remove('active');
+      confirmSaveScope(window._pendingScope, matched, true);
     } else {
+      document.getElementById('scopePwError').textContent = '密碼錯誤';
       document.getElementById('scopePwError').style.display = 'block';
       document.getElementById('scopePwInput').value = '';
-      document.getElementById('scopePwInput').focus();
     }
   });
 }
 
-function confirmSaveScope(scope) {
-  const newData = window._pendingSave;
-  const cellKey = window._pendingSaveCell;
-  const dateKey = window._pendingSaveDateKey;
+function confirmAsStaffName(name) {
   document.getElementById('saveScopeModal').classList.remove('active');
+  confirmSaveScope(window._pendingScope, name, false);
+}
 
-  if (scope === 'all') {
-    if (newData) scheduleData[cellKey] = newData;
-    else delete scheduleData[cellKey];
-    delete overrides[dateKey];
-    renderAll();
-    showToast('儲存中...');
-    Promise.all([
-      saveTemplateToCloud(cellKey, newData),
-      deleteOverrideFromCloud(dateKey)
-    ]).then(function() { showToast('已更新所有週模板'); })
-      .catch(function() { showToast('儲存失敗，請重試'); });
-  } else {
-    if (newData) overrides[dateKey] = newData;
-    else delete overrides[dateKey];
-    renderAll();
-    showToast('儲存中...');
-    saveOverrideToCloud(dateKey, newData)
-      .then(function() { showToast('已儲存本週調整'); })
-      .catch(function() { showToast('儲存失敗，請重試'); });
+function confirmAsStaff() {
+  var name = document.getElementById('staffNameInput').value.trim();
+  if (!name) { document.getElementById('scopePwError').textContent = '請輸入姓名'; document.getElementById('scopePwError').style.display = 'block'; return; }
+  document.getElementById('saveScopeModal').classList.remove('active');
+  confirmSaveScope(window._pendingScope, name, false);
+}
+
+function openHistoryAuth() {
+  document.getElementById('historyAuthModal').classList.add('active');
+  document.getElementById('historyPwInput').value = '';
+  document.getElementById('historyPwError').style.display = 'none';
+  setTimeout(function(){ document.getElementById('historyPwInput').focus(); }, 50);
+}
+
+function confirmHistoryAuth() {
+  var input = document.getElementById('historyPwInput').value;
+  sha256(input).then(function(hash) {
+    var ok = false;
+    for (var i = 0; i < ADMINS.length; i++) { if (ADMINS[i].hash === hash) { ok = true; break; } }
+    if (ok) { document.getElementById('historyAuthModal').classList.remove('active'); openHistory(); }
+    else { document.getElementById('historyPwError').style.display = 'block'; document.getElementById('historyPwInput').value = ''; }
+  });
+}
+
+var historyTab = 'pending';
+
+function openHistory() {
+  document.getElementById('historyModal').classList.add('active');
+  historyTab = 'pending';
+  updatePendingCount();
+  switchHistoryTab('pending');
+}
+
+function closeHistory() { document.getElementById('historyModal').classList.remove('active'); }
+
+function switchHistoryTab(tab) {
+  historyTab = tab;
+  document.getElementById('tabPending').classList.toggle('active', tab === 'pending');
+  document.getElementById('tabLog').classList.toggle('active', tab === 'log');
+  if (tab === 'pending') renderPendingList(); else renderLogList();
+}
+
+function updatePendingCount() {
+  var el = document.getElementById('pendingCount');
+  el.textContent = pendingData.length > 0 ? pendingData.length : '';
+}
+
+function renderPendingList() {
+  var body = document.getElementById('historyBody');
+  if (pendingData.length === 0) { body.innerHTML = '<div class="log-empty">沒有待審核的修改</div>'; return; }
+  var h = '';
+  for (var i = 0; i < pendingData.length; i++) {
+    var p = pendingData[i];
+    var newStr = p.data ? formatCellPreview(p.data) : '（清除）';
+    var oldStr = p.oldData ? formatCellPreview(p.oldData) : '（無）';
+    h += '<div class="pending-card"><div class="pending-card-header"><div>';
+    h += '<span class="log-user">' + p.user + '</span> ';
+    h += '<span class="log-scope ' + (p.scope === '所有週' ? 'all' : 'this') + '">' + p.scope + '</span> ';
+    h += '<span class="log-key">' + p.templateKey + '</span></div>';
+    h += '<div class="pending-card-actions">';
+    h += '<button class="btn-approve" onclick="approvePending(\x27' + p.id + '\x27)">✓ 批准</button>';
+    h += '<button class="btn-reject" onclick="rejectPending(\x27' + p.id + '\x27)">✕ 拒絕</button>';
+    h += '</div></div>';
+    h += '<div class="log-change">' + oldStr + '<span class="log-arrow">→</span>' + newStr + '</div></div>';
   }
+  body.innerHTML = h;
+}
 
-  window._pendingSave = null;
-  window._pendingSaveCell = null;
-  window._pendingSaveDateKey = null;
+function formatCellPreview(data) {
+  var parts = [];
+  if (data.cut && data.cut.length) parts.push('切:' + data.cut.map(function(p){ return p.name; }).join(','));
+  if (data.print && data.print.length) parts.push('印:' + data.print.map(function(p){ return p.name; }).join(','));
+  return parts.join(' | ') || '（空）';
+}
+
+function approvePending(id) {
+  showToast('批准中...');
+  apiPost({ action: 'approvePending', id: id, approver: '管理' })
+    .then(function(resp) {
+      if (resp.success) { pendingData = pendingData.filter(function(p){ return p.id !== id; }); updatePendingCount(); renderPendingList(); loadData(); showToast('已批准'); }
+    }).catch(function() { showToast('操作失敗'); });
+}
+
+function rejectPending(id) {
+  showToast('拒絕中...');
+  apiPost({ action: 'rejectPending', id: id, approver: '管理' })
+    .then(function(resp) {
+      if (resp.success) { pendingData = pendingData.filter(function(p){ return p.id !== id; }); updatePendingCount(); renderPendingList(); renderAll(); showToast('已拒絕'); }
+    }).catch(function() { showToast('操作失敗'); });
+}
+
+function renderLogList() {
+  var body = document.getElementById('historyBody');
+  body.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:20px;">載入中...</div>';
+  fetch(API_URL + '?action=readLog&limit=50')
+    .then(function(r){ return r.json(); })
+    .then(function(data) {
+      var logs = data.logs || [];
+      if (logs.length === 0) { body.innerHTML = '<div class="log-empty">尚無修改記錄</div>'; return; }
+      var h = '';
+      for (var i = 0; i < logs.length; i++) {
+        var log = logs[i];
+        var scopeClass = (log.scope.indexOf('所有週') >= 0) ? 'all' : 'this';
+        h += '<div class="log-item">';
+        h += '<div class="log-meta">';
+        h += '<span class="log-user">' + log.user + '</span>';
+        h += '<span class="log-scope ' + scopeClass + '">' + log.scope + '</span>';
+        h += '<span class="log-key">' + log.key + '</span>';
+        h += '<span class="log-time">' + log.time + '</span>';
+        h += '</div>';
+        h += '<div class="log-change-card">';
+        h += '<div class="log-change-old">' + log.oldData + '</div>';
+        h += '<div class="log-arrow">→</div>';
+        h += '<div class="log-change-new">' + log.newData + '</div>';
+        h += '</div>';
+        h += '</div>';
+      }
+      body.innerHTML = h;
+    }).catch(function() { body.innerHTML = '<div class="log-empty">載入失敗</div>'; });
+}
+
+function hasPending(templateKey, dateKey) {
+  for (var i = 0; i < pendingData.length; i++) {
+    if (pendingData[i].templateKey === templateKey || pendingData[i].dateKey === dateKey) return true;
+  }
+  return false;
+}
+
+function confirmSaveScope(scope, userName, isAdmin) {
+  var newData = window._pendingSave;
+  var cellKey = window._pendingSaveCell;
+  var dateKey = window._pendingSaveDateKey;
+  var dates = getWeekDates(currentWeekOffset);
+  var slotId = cellKey.split('-')[0];
+  var day = cellKey.split('-')[1];
+  var dayIndex = DAYS.indexOf(day);
+  var oldCell = getCellData(slotId, day, dates, dayIndex);
+  var oldData = oldCell.data || null;
+
+  if (isAdmin) {
+    if (scope === 'all') {
+      if (newData) scheduleData[cellKey] = newData; else delete scheduleData[cellKey];
+      delete overrides[dateKey]; renderAll(); showToast('儲存中...');
+      Promise.all([ apiPost({ action: 'saveTemplate', key: cellKey, data: newData, oldData: oldData, user: userName }), deleteOverrideFromCloud(dateKey) ])
+        .then(function() { showToast(userName + ' 已更新所有週模板'); }).catch(function() { showToast('儲存失敗'); });
+    } else {
+      if (newData) overrides[dateKey] = newData; else delete overrides[dateKey];
+      renderAll(); showToast('儲存中...');
+      apiPost({ action: 'saveOverride', dateKey: dateKey, data: newData, oldData: oldData, user: userName })
+        .then(function() { showToast(userName + ' 已儲存本週調整'); }).catch(function() { showToast('儲存失敗'); });
+    }
+  } else {
+    showToast('提交中...');
+    apiPost({ action: 'submitPending', user: userName, scope: scope === 'all' ? '所有週' : '僅這週', templateKey: cellKey, dateKey: dateKey, data: newData, oldData: oldData })
+      .then(function(resp) {
+        if (resp.success) { pendingData.push({ id: resp.id, user: userName, scope: scope === 'all' ? '所有週' : '僅這週', templateKey: cellKey, dateKey: dateKey, data: newData, oldData: oldData }); renderAll(); showToast(userName + ' 已提交，待審核'); }
+        else showToast('提交失敗');
+      }).catch(function() { showToast('提交失敗'); });
+  }
+  window._pendingSave = null; window._pendingSaveCell = null; window._pendingSaveDateKey = null;
 }
 
 function closeModal(){document.getElementById('editModal').classList.remove('active');editingCell=null;}
 document.getElementById('editModal').addEventListener('click',function(e){if(e.target===this)closeModal();});
+document.getElementById('reviewModal').addEventListener('click',function(e){if(e.target===this)closeReview();});
 document.getElementById('saveScopeModal').addEventListener('click',function(e){if(e.target===this){this.classList.remove('active');window._pendingSave=null;}});
-document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeModal();document.getElementById('saveScopeModal').classList.remove('active');}});
+document.getElementById('historyModal').addEventListener('click',function(e){if(e.target===this)closeHistory();});
+document.getElementById('historyAuthModal').addEventListener('click',function(e){if(e.target===this){this.classList.remove('active');}});
+document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeModal();closeReview();document.getElementById('saveScopeModal').classList.remove('active');closeHistory();document.getElementById('historyAuthModal').classList.remove('active');}});
 
 function showToast(msg){const t=document.createElement('div');t.textContent=msg;Object.assign(t.style,{position:'fixed',bottom:'24px',left:'50%',transform:'translateX(-50%)',background:'var(--text)',color:'#fff',padding:'10px 22px',borderRadius:'8px',fontSize:'13px',fontWeight:'500',boxShadow:'0 4px 16px rgba(0,0,0,.15)',zIndex:'9999',animation:'modalIn .2s ease',fontFamily:"'Noto Sans TC',sans-serif"});document.body.appendChild(t);setTimeout(()=>{t.style.opacity='0';t.style.transition='opacity .3s';setTimeout(()=>t.remove(),300);},3000);}
 
