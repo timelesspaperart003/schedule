@@ -1109,8 +1109,8 @@ function openReview(templateKey, timeLabel, day, dayIndex, cellPendings, current
 
   for (var i = 0; i < cellPendings.length; i++) {
     var p = cellPendings[i];
-    var oldStr = currentData ? formatCellPreview(currentData) : '（無排班）';
-    var newStr = p.data ? formatCellPreview(p.data) : '（清除）';
+    var oldStr = currentData ? formatCellDetailInline(currentData) : '（無排班）';
+    var newStr = p.data ? formatCellDetailInline(p.data) : '（清除）';
 
     h += '<div class="review-section">';
     h += '<div class="review-submitter">👤 <strong>' + p.user + '</strong> 提交了 <span class="log-scope ' + (p.scope === '所有週' ? 'all' : 'this') + '">' + p.scope + '</span> 修改</div>';
