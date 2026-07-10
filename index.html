@@ -1344,42 +1344,75 @@ function renderPendingList() {
   var h = '';
   for (var i = 0; i < pendingData.length; i++) {
     var p = pendingData[i];
-    var newStr = p.data ? formatCellPreview(p.data) : '（清除）';
-    var oldStr = p.oldData ? formatCellPreview(p.oldData) : '（無）';
-    h += '<div class="pending-card"><div class="pending-card-header"><div>';
-    h += '<span class="log-user">' + p.user + '</span> ';
-    h += '<span class="log-scope ' + (p.scope === '所有週' ? 'all' : 'this') + '">' + p.scope + '</span> ';
-    h += '<span class="log-key">' + p.templateKey + '</span></div>';
-    h += '<div class="pending-card-actions">';
-    h += '<button class="btn-approve" onclick="approvePending(\x27' + p.id + '\x27)">✓ 批准</button>';
-    h += '<button class="btn-reject" onclick="rejectPending(\x27' + p.id + '\x27)">✕ 拒絕</button>';
+    h += '<div class="pending-card">';
+    h += '<div class="pending-card-header"><div class="log-meta" style="margin:0">';
+    h += '<span class="log-user">' + p.user + '</span>';
+    h += '<span class="log-scope ' + (p.scope === '所有週' ? 'all' : 'this') + '">' + p.scope + '</span>';
+    h += '<span class="log-key">' + p.templateKey + '</span>';
+    if (p.timestamp) h += '<span class="log-time">' + p.timestamp + '</span>';
     h += '</div></div>';
-    h += '<div class="log-change">' + oldStr + '<span class="log-arrow">→</span>' + newStr + '</div></div>';
+    h += '<div class="log-compare" style="margin:10px 0">';
+    h += '<div class="log-box old"><div class="log-box-title">目前</div><div class="log-box-content">' + formatCellDetailInline(p.oldData) + '</div></div>';
+    h += '<div class="log-arrow">→</div>';
+    h += '<div class="log-box new"><div class="log-box-title">修改為</div><div class="log-box-content">' + formatCellDetailInline(p.data) + '</div></div>';
+    h += '</div>';
+    h += '<div class="review-pw-row" style="margin-top:8px">';
+    h += '<input type="password" class="scope-pw-input" id="pendingPw_' + i + '" placeholder="管理員/操作員密碼" onkeydown="if(event.key===\'Enter\')pendingAction(\x27' + p.id + '\x27,' + i + ',\x27approve\x27)">';
+    h += '</div>';
+    h += '<div class="pending-card-actions" style="margin-top:6px">';
+    h += '<button class="btn-approve" onclick="pendingAction(\x27' + p.id + '\x27,' + i + ',\x27approve\x27)">✓ 批准</button>';
+    h += '<button class="btn-reject" onclick="pendingAction(\x27' + p.id + '\x27,' + i + ',\x27reject\x27)">✕ 拒絕</button>';
+    h += '</div>';
+    h += '<div class="review-pw-error" id="pendingErr_' + i + '">密碼錯誤或權限不足</div>';
+    h += '</div>';
   }
   body.innerHTML = h;
 }
 
-function formatCellPreview(data) {
-  var parts = [];
-  if (data.cut && data.cut.length) parts.push('切:' + data.cut.map(function(p){ return p.name; }).join(','));
-  if (data.print && data.print.length) parts.push('印:' + data.print.map(function(p){ return p.name; }).join(','));
-  return parts.join(' | ') || '（空）';
+function formatCellDetailInline(data) {
+  if (!data) return '<span style="color:var(--text-dim)">（無排班）</span>';
+  var h = '';
+  if (data.cut && data.cut.length) {
+    h += '<div><span class="lbl cut">切割：</span>';
+    h += data.cut.map(function(p){ return '<strong>' + p.name + '</strong>' + (p.note ? '<span style="font-size:10px;opacity:.6"> ' + p.note + '</span>' : ''); }).join('、');
+    h += '</div>';
+  }
+  if (data.print && data.print.length) {
+    h += '<div><span class="lbl print">印+妙：</span>';
+    h += data.print.map(function(p){ return '<strong>' + p.name + '</strong>' + (p.note ? '<span style="font-size:10px;opacity:.6"> ' + p.note + '</span>' : ''); }).join('、');
+    h += '</div>';
+  }
+  return h || '<span style="color:var(--text-dim)">（空）</span>';
 }
 
-function approvePending(id) {
-  showToast('批准中...');
-  apiPost({ action: 'approvePending', id: id, approver: '管理' })
-    .then(function(resp) {
-      if (resp.success) { pendingData = pendingData.filter(function(p){ return p.id !== id; }); updatePendingCount(); renderPendingList(); loadData(); showToast('已批准'); }
-    }).catch(function() { showToast('操作失敗'); });
-}
+function pendingAction(pendingId, idx, action) {
+  var pwInput = document.getElementById('pendingPw_' + idx);
+  var errEl = document.getElementById('pendingErr_' + idx);
+  var pw = pwInput.value;
+  if (!pw) { errEl.style.display = 'block'; errEl.textContent = '請輸入密碼'; return; }
 
-function rejectPending(id) {
-  showToast('拒絕中...');
-  apiPost({ action: 'rejectPending', id: id, approver: '管理' })
-    .then(function(resp) {
-      if (resp.success) { pendingData = pendingData.filter(function(p){ return p.id !== id; }); updatePendingCount(); renderPendingList(); renderAll(); showToast('已拒絕'); }
-    }).catch(function() { showToast('操作失敗'); });
+  sha256(pw).then(function(hash) {
+    var approver = null;
+    for (var i = 0; i < ADMINS.length; i++) {
+      if (ADMINS[i].hash === hash) { approver = ADMINS[i].name; break; }
+    }
+    if (!approver) { errEl.style.display = 'block'; errEl.textContent = '密碼錯誤或權限不足'; pwInput.value = ''; return; }
+    errEl.style.display = 'none';
+
+    if (action === 'approve') {
+      showToast('批准中...');
+      apiPost({ action: 'approvePending', id: pendingId, approver: approver })
+        .then(function(resp) {
+          if (resp.success) { pendingData = pendingData.filter(function(p){ return p.id !== pendingId; }); updatePendingCount(); renderPendingList(); loadData(); showToast(approver + ' 已批准'); }
+        }).catch(function() { showToast('操作失敗'); });
+    } else {
+      showToast('拒絕中...');
+      apiPost({ action: 'rejectPending', id: pendingId, approver: approver })
+        .then(function(resp) {
+          if (resp.success) { pendingData = pendingData.filter(function(p){ return p.id !== pendingId; }); updatePendingCount(); renderPendingList(); renderAll(); showToast(approver + ' 已拒絕'); }
+        }).catch(function() { showToast('操作失敗'); });
+    }
+  });
 }
 
 function renderLogList() {
