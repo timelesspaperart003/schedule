@@ -583,6 +583,61 @@
   .mw-note {
     font-size: 6px; font-weight: 400; opacity: .6;
   }
+
+  /* ─── 批量調整（整月月曆） ─── */
+  .batch-overlay { display: none; position: fixed; inset: 0; background: var(--bg); z-index: 900; flex-direction: column; }
+  .batch-overlay.active { display: flex; }
+  .batch-header { background: var(--header-bg); color: #fff; padding: 12px 24px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; box-shadow: 0 4px 20px rgba(100,90,80,.18); }
+  .batch-title { font-size: 17px; font-weight: 700; }
+  .batch-user { font-size: 12px; font-weight: 500; opacity: .8; margin-left: 6px; }
+  .batch-actions { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+  .batch-count { font-size: 12px; background: rgba(255,255,255,.2); padding: 4px 10px; border-radius: 20px; }
+  .batch-hint { padding: 8px 24px; font-size: 12px; color: var(--text-muted); background: var(--surface); border-bottom: 1px solid var(--border); display: flex; gap: 14px; flex-wrap: wrap; align-items: center; }
+  .batch-hint .sw { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: -2px; margin-right: 4px; }
+  .batch-scroll { flex: 1; overflow: auto; padding: 14px 24px 40px; }
+  .batch-cal { display: grid; grid-template-columns: repeat(7, minmax(150px, 1fr)); gap: 8px; min-width: 1080px; }
+  .bcal-wd { text-align: center; font-size: 12px; font-weight: 600; color: var(--text-muted); padding: 2px 0; }
+  .bday { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; display: flex; flex-direction: column; }
+  .bday.blank { background: transparent; border: none; }
+  .bday.is-today { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(154,141,184,.35); }
+  .bday-head { display: flex; align-items: center; gap: 6px; padding: 5px 8px; background: var(--surface-2); border-bottom: 1px solid var(--border); }
+  .bday-date { font-weight: 700; font-size: 14px; font-family: 'JetBrains Mono', monospace; }
+  .bday-wd { font-size: 11px; color: var(--text-muted); }
+  .bday-tools { margin-left: auto; display: flex; gap: 4px; }
+  .bday-tools button { font-family: inherit; font-size: 10px; padding: 1px 6px; border-radius: 4px; border: 1px solid var(--border); background: var(--surface); color: var(--text-secondary); cursor: pointer; }
+  .bday-tools button:hover { background: var(--surface-3); }
+  .bday-tools button.paste { border-color: var(--accent); color: var(--accent); }
+  .bslot { display: flex; gap: 6px; padding: 3px 8px; font-size: 11px; line-height: 1.5; cursor: pointer; border-top: 1px dashed var(--surface-3); align-items: baseline; }
+  .bslot:first-of-type { border-top: none; }
+  .bslot:hover { background: var(--surface-3); }
+  .bslot.override { background: #efeaf5; }
+  .bslot.changed { background: #fbefc9; }
+  .bslot-time { width: 34px; flex-shrink: 0; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; font-size: 10px; }
+  .bslot-ppl { flex: 1; min-width: 0; }
+  .bslot-ppl .r { font-size: 9px; font-weight: 700; margin-right: 2px; }
+  .bslot-ppl .r.cut { color: var(--cut-label-text); }
+  .bslot-ppl .r.print { color: var(--print-label-text); }
+  .bslot-ppl .r.combo { color: #6b5888; }
+  .bslot-ppl .n { font-weight: 600; }
+  .bslot-ppl .nt { font-size: 9px; opacity: .65; }
+  .bslot-ppl .sep { color: var(--text-dim); margin: 0 3px; }
+  .bslot-empty { color: var(--text-dim); }
+  .bchips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+  .bchips-label { font-size: 11px; color: var(--text-muted); width: 100%; }
+  .bchip { font-family: inherit; font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 14px; border: 1px solid; cursor: pointer; }
+  .bchip-group { display: flex; gap: 4px; align-items: center; }
+  .bchip-group .mini { font-size: 10px; padding: 2px 6px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface); cursor: pointer; font-family: inherit; color: var(--text-secondary); }
+  .batch-edit-footer { justify-content: space-between; flex-wrap: wrap; }
+  #batchEditBody { max-height: 65vh; overflow-y: auto; }
+  @media (max-width: 768px) {
+    .batch-header { padding: 10px 14px; gap: 10px; }
+    .batch-hint { padding: 6px 14px; }
+    .batch-scroll { padding: 10px 12px 40px; }
+    .batch-cal { grid-template-columns: 1fr; min-width: 0; }
+    .bcal-wd, .bday.blank { display: none; }
+    .bslot { font-size: 12px; padding: 5px 10px; }
+    .bslot-time { width: 40px; font-size: 11px; }
+  }
 </style>
 </head>
 <body>
@@ -602,6 +657,7 @@
     </div>
     <button class="btn-header" onclick="resetToDefault()" title="還原預設資料">↺ 還原</button>
     <button class="btn-header" onclick="loadData()" title="重新載入雲端資料">⟳ 同步</button>
+    <button class="btn-header" onclick="openBatchAuth()" title="整個月一次調整">🗓️ 批量調整</button>
     <button class="btn-header" onclick="openHistoryAuth()" title="修改記錄">📋 記錄</button>
   </div>
 </header>
@@ -680,6 +736,56 @@
       <button class="scope-pw-confirm" onclick="confirmHistoryAuth()">確認</button>
     </div>
     <div class="scope-pw-error" id="historyPwError" style="display:none;">權限不足</div>
+  </div>
+</div>
+<!-- Batch Auth Modal -->
+<div class="scope-overlay" id="batchAuthModal">
+  <div class="scope-modal">
+    <div class="scope-title">批量調整班表</div>
+    <div class="scope-desc">請輸入管理員或操作員密碼</div>
+    <div class="scope-pw-row">
+      <input type="password" class="scope-pw-input" id="batchPwInput" placeholder="密碼" autocomplete="off" onkeydown="if(event.key==='Enter')confirmBatchAuth()">
+      <button class="scope-pw-confirm" onclick="confirmBatchAuth()">確認</button>
+    </div>
+    <div class="scope-pw-error" id="batchPwError" style="display:none;">密碼錯誤或權限不足</div>
+  </div>
+</div>
+<!-- Batch Month Calendar -->
+<div class="batch-overlay" id="batchModal">
+  <div class="batch-header">
+    <div class="batch-title">🗓️ 批量調整<span class="batch-user" id="batchUser"></span></div>
+    <div class="week-nav">
+      <button onclick="batchChangeMonth(-1)" title="上個月">◀</button>
+      <span class="week-label" id="batchMonthLabel" style="min-width:110px"></span>
+      <button onclick="batchChangeMonth(1)" title="下個月">▶</button>
+    </div>
+    <div class="batch-actions">
+      <span class="batch-count" id="batchCount">尚無變更</span>
+      <button class="btn-header" onclick="closeBatch()">取消</button>
+      <button class="btn-header" id="batchSaveBtn" onclick="saveBatch()" style="background:rgba(255,255,255,.3);font-weight:700">💾 儲存全部</button>
+    </div>
+  </div>
+  <div class="batch-hint">
+    <span>點時段即可修改；「複製」一天後可「貼上」到其他天。可切換月份，最後一次儲存。</span>
+    <span><span class="sw" style="background:#fbefc9;border:1px solid #e6d28f"></span>尚未儲存</span>
+    <span><span class="sw" style="background:#efeaf5;border:1px solid #d6cce6"></span>已有臨時調整</span>
+  </div>
+  <div class="batch-scroll"><div class="batch-cal" id="batchCal"></div></div>
+</div>
+<div class="modal-overlay" id="batchEditModal">
+  <div class="modal">
+    <div class="modal-header"><h3 id="batchEditTitle">編輯時段</h3><button class="modal-close" onclick="closeBatchEdit()">✕</button></div>
+    <div class="modal-body" id="batchEditBody"></div>
+    <div class="modal-footer batch-edit-footer">
+      <div style="display:flex;gap:6px">
+        <button class="btn" onclick="batchEditClear()" title="這個時段不排人">🚫 清空</button>
+        <button class="btn" onclick="batchEditRevert()" title="回到所有週的固定班表">↺ 用固定班表</button>
+      </div>
+      <div style="display:flex;gap:6px">
+        <button class="btn" onclick="closeBatchEdit()">取消</button>
+        <button class="btn btn-primary" onclick="batchEditApply()">套用</button>
+      </div>
+    </div>
   </div>
 </div>
 <!-- History + Review Modal -->
@@ -1511,13 +1617,248 @@ function confirmSaveScope(scope, userName, isAdmin) {
   window._pendingSave = null; window._pendingSaveCell = null; window._pendingSaveDateKey = null;
 }
 
+/* ─── 批量調整（整月月曆）───
+ * 編輯中的變更先放在 batchDraft（dateKey → 該格變更後的內容），按「儲存全部」才一次送到 GAS。
+ * 跟固定班表（所有週）相同的格子不存臨時調整、會刪掉原有的臨時調整；清空的格子存成空的臨時調整。
+ * 只有管理員/操作員能用；原本的單格編輯、員工送審流程不變。 */
+var batchUser = null, batchMonth = null, batchDraft = {}, batchClip = null, batchEditing = null;
+
+function batchEsc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function(c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+function batchClone(d) { return d ? JSON.parse(JSON.stringify(d)) : null; }
+function batchDayIdx(date) { return (date.getDay() + 6) % 7; }
+function batchKeyParts(dk) {
+  var i = dk.indexOf('_'), p = dk.slice(0, i).split('-');
+  var date = new Date(+p[0], +p[1] - 1, +p[2]), slot = dk.slice(i + 1);
+  return { date: date, slot: slot, tk: slot + '-' + DAYS[batchDayIdx(date)] };
+}
+function batchCurrent(dk) { return overrides[dk] || scheduleData[batchKeyParts(dk).tk] || null; }
+function batchEff(dk) { return (dk in batchDraft) ? batchDraft[dk] : batchCurrent(dk); }
+function batchNorm(d) {
+  d = d || {};
+  var f = function(arr) { return (arr || []).map(function(p) { return { name: p.name, note: p.note || '' }; }); };
+  return JSON.stringify({ cut: f(d.cut), print: f(d.print) });
+}
+function batchSame(a, b) { return batchNorm(a) === batchNorm(b); }
+function batchSetDraft(dk, data) {
+  data = data || { cut: [], print: [] };
+  if (batchSame(data, batchCurrent(dk))) delete batchDraft[dk]; else batchDraft[dk] = data;
+}
+function batchDayLabel(date) { return (date.getMonth() + 1) + '/' + date.getDate() + '(週' + DAYS[batchDayIdx(date)] + ')'; }
+
+function openBatchAuth() {
+  document.getElementById('batchAuthModal').classList.add('active');
+  document.getElementById('batchPwInput').value = '';
+  document.getElementById('batchPwError').style.display = 'none';
+  setTimeout(function(){ document.getElementById('batchPwInput').focus(); }, 50);
+}
+
+function confirmBatchAuth() {
+  var input = document.getElementById('batchPwInput').value;
+  if (!input) return;
+  sha256(input).then(function(hash) {
+    var matched = null;
+    for (var i = 0; i < ADMINS.length; i++) { if (ADMINS[i].hash === hash) { matched = ADMINS[i].name; break; } }
+    if (!matched) { document.getElementById('batchPwError').style.display = 'block'; document.getElementById('batchPwInput').value = ''; return; }
+    document.getElementById('batchAuthModal').classList.remove('active');
+    batchUser = matched;
+    openBatch();
+  });
+}
+
+function openBatch() {
+  var now = new Date();
+  batchMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  batchDraft = {}; batchClip = null;
+  document.getElementById('batchUser').textContent = '｜' + batchUser;
+  document.getElementById('batchModal').classList.add('active');
+  document.body.style.overflow = 'hidden';
+  renderBatch();
+}
+
+function closeBatch(force) {
+  var n = Object.keys(batchDraft).length;
+  if (!force && n && !confirm('還有 ' + n + ' 格尚未儲存，確定要離開嗎？')) return;
+  document.getElementById('batchModal').classList.remove('active');
+  document.body.style.overflow = '';
+  batchDraft = {}; batchClip = null;
+}
+
+function batchChangeMonth(dir) {
+  batchMonth = new Date(batchMonth.getFullYear(), batchMonth.getMonth() + dir, 1);
+  renderBatch();
+}
+
+function batchPeopleHTML(arr) {
+  return arr.map(function(p) {
+    var c = PERSON_COLORS[p.name];
+    return '<span class="n"' + (c ? ' style="color:' + c.text + '"' : '') + '>' + batchEsc(p.name) + '</span>' +
+      (p.note ? '<span class="nt">(' + batchEsc(p.note) + ')</span>' : '');
+  }).join('、');
+}
+
+function batchCellHTML(cd) {
+  var cut = (cd && cd.cut) || [], print = (cd && cd.print) || [];
+  if (!cut.length && !print.length) return '<span class="bslot-empty">—</span>';
+  if (isCombo(cd)) {
+    var note = [cut[0].note, print[0].note].filter(function(n) { return n; }).join(', ');
+    return '<span class="r combo">印切</span>' + batchPeopleHTML([{ name: cut[0].name, note: note }]);
+  }
+  var parts = [];
+  if (cut.length) parts.push('<span class="r cut">切</span>' + batchPeopleHTML(cut));
+  if (print.length) parts.push('<span class="r print">印</span>' + batchPeopleHTML(print));
+  return parts.join('<span class="sep">｜</span>');
+}
+
+function renderBatch() {
+  var y = batchMonth.getFullYear(), m = batchMonth.getMonth();
+  document.getElementById('batchMonthLabel').textContent = y + ' 年 ' + (m + 1) + ' 月';
+  var today = dateStr(new Date());
+  var h = DAYS.map(function(d) { return '<div class="bcal-wd">週' + d + '</div>'; }).join('');
+  var lead = batchDayIdx(new Date(y, m, 1)), days = new Date(y, m + 1, 0).getDate();
+  for (var i = 0; i < lead; i++) h += '<div class="bday blank"></div>';
+  for (var d = 1; d <= days; d++) {
+    var date = new Date(y, m, d), ds = dateStr(date);
+    h += '<div class="bday' + (ds === today ? ' is-today' : '') + '">';
+    h += '<div class="bday-head"><span class="bday-date">' + (m + 1) + '/' + d + '</span><span class="bday-wd">週' + DAYS[batchDayIdx(date)] + '</span><span class="bday-tools">';
+    h += '<button onclick="batchCopyDay(\'' + ds + '\')">複製</button>';
+    if (batchClip && batchClip.from !== ds) h += '<button class="paste" onclick="batchPasteDay(\'' + ds + '\')">貼上</button>';
+    h += '</span></div>';
+    TIME_SLOTS.forEach(function(slot) {
+      var dk = ds + '_' + slot.id;
+      var cls = (dk in batchDraft) ? ' changed' : (overrides[dk] ? ' override' : '');
+      h += '<div class="bslot' + cls + '" onclick="openBatchSlot(\'' + dk + '\')">' +
+        '<span class="bslot-time">' + (slot.id === 'early' ? '開機' : slot.label) + '</span>' +
+        '<span class="bslot-ppl">' + batchCellHTML(batchEff(dk)) + '</span></div>';
+    });
+    h += '</div>';
+  }
+  document.getElementById('batchCal').innerHTML = h;
+  var n = Object.keys(batchDraft).length;
+  document.getElementById('batchCount').textContent = n ? n + ' 格待儲存' : '尚無變更';
+}
+
+function batchCopyDay(ds) {
+  batchClip = { from: ds, slots: {} };
+  TIME_SLOTS.forEach(function(s) { batchClip.slots[s.id] = batchClone(batchEff(ds + '_' + s.id)); });
+  renderBatch();
+  showToast('已複製 ' + batchDayLabel(batchKeyParts(ds + '_t1').date) + '，到其他天按「貼上」');
+}
+
+function batchPasteDay(ds) {
+  if (!batchClip) return;
+  TIME_SLOTS.forEach(function(s) { batchSetDraft(ds + '_' + s.id, batchClone(batchClip.slots[s.id])); });
+  renderBatch();
+}
+
+function batchKnownNames() {
+  var set = {};
+  Object.keys(PERSON_COLORS).forEach(function(n) { set[n] = 1; });
+  [scheduleData, overrides, batchDraft].forEach(function(src) {
+    Object.keys(src).forEach(function(k) {
+      var c = src[k] || {};
+      (c.cut || []).concat(c.print || []).forEach(function(p) { if (p.name) set[p.name] = 1; });
+    });
+  });
+  return Object.keys(set);
+}
+
+function openBatchSlot(dk) {
+  batchEditing = dk;
+  var kp = batchKeyParts(dk);
+  var slot = TIME_SLOTS.filter(function(s) { return s.id === kp.slot; })[0];
+  document.getElementById('batchEditTitle').textContent = batchDayLabel(kp.date) + '・' + (slot.id === 'early' ? '開機' : slot.label + ' ~ ' + slot.time);
+  var data = batchEff(dk) || { cut: [], print: [] };
+  var h = '<div class="bchips"><div class="bchips-label">快速加入（按「切」或「印」）</div>';
+  batchKnownNames().forEach(function(n) {
+    var e = batchEsc(n);
+    h += '<span class="bchip-group"><span class="bchip" style="' + ps(n) + '">' + e + '</span>' +
+      '<button class="mini" data-name="' + e + '" onclick="batchQuickAdd(\'bcut\',this)">切</button>' +
+      '<button class="mini" data-name="' + e + '" onclick="batchQuickAdd(\'bprint\',this)">印</button></span>';
+  });
+  h += '</div>';
+  h += '<div class="form-section"><div class="form-section-title cut">' + svgCut + ' 切割人員</div><div id="bcutRows">';
+  (data.cut || []).forEach(function(p, i) { h += pRow('bcut', i, batchEsc(p.name), batchEsc(p.note)); });
+  h += '</div><button class="btn-add-person" onclick="addPerson(\'bcut\')">+ 新增切割人員</button></div>';
+  h += '<div class="form-section"><div class="form-section-title print">' + svgPrint + ' 印+妙人員</div><div id="bprintRows">';
+  (data.print || []).forEach(function(p, i) { h += pRow('bprint', i, batchEsc(p.name), batchEsc(p.note)); });
+  h += '</div><button class="btn-add-person" onclick="addPerson(\'bprint\')">+ 新增印+妙人員</button></div>';
+  document.getElementById('batchEditBody').innerHTML = h;
+  document.getElementById('batchEditModal').classList.add('active');
+}
+
+function batchQuickAdd(role, btn) {
+  document.getElementById(role + 'Rows').insertAdjacentHTML('beforeend', pRow(role, 0, batchEsc(btn.dataset.name), ''));
+}
+
+function batchReadRows(id) {
+  var out = [];
+  document.querySelectorAll('#' + id + ' .form-row').forEach(function(r) {
+    var n = r.querySelector('[data-field="name"]').value.trim(), t = r.querySelector('[data-field="note"]').value.trim();
+    if (n) out.push({ name: n, note: t });
+  });
+  return out;
+}
+
+function closeBatchEdit() { document.getElementById('batchEditModal').classList.remove('active'); batchEditing = null; }
+
+function batchEditApply() {
+  if (!batchEditing) return;
+  batchSetDraft(batchEditing, { cut: batchReadRows('bcutRows'), print: batchReadRows('bprintRows') });
+  closeBatchEdit(); renderBatch();
+}
+
+function batchEditClear() {
+  if (!batchEditing) return;
+  batchSetDraft(batchEditing, { cut: [], print: [] });
+  closeBatchEdit(); renderBatch();
+}
+
+function batchEditRevert() {
+  if (!batchEditing) return;
+  batchSetDraft(batchEditing, batchClone(scheduleData[batchKeyParts(batchEditing).tk]));
+  closeBatchEdit(); renderBatch();
+}
+
+function saveBatch() {
+  var keys = Object.keys(batchDraft).sort();
+  if (!keys.length) { showToast('沒有需要儲存的變更'); return; }
+  var changes = keys.map(function(dk) {
+    var next = batchDraft[dk];
+    var tmpl = scheduleData[batchKeyParts(dk).tk] || null;
+    return {
+      dateKey: dk,
+      data: batchSame(next, tmpl) ? null : { cut: next.cut || [], print: next.print || [] },  // null = 刪除臨時調整、回到固定班表
+      oldData: batchCurrent(dk),
+      newData: next
+    };
+  });
+  var btn = document.getElementById('batchSaveBtn');
+  btn.disabled = true; btn.textContent = '儲存中...';
+  apiPost({ action: 'saveOverridesBatch', user: batchUser, changes: changes })
+    .then(function(resp) {
+      if (!resp || !resp.success) throw new Error((resp && resp.error) || '儲存失敗');
+      changes.forEach(function(c) { if (c.data) overrides[c.dateKey] = c.data; else delete overrides[c.dateKey]; });
+      writeCache({ template: scheduleData, overrides: overrides, pending: pendingData });
+      closeBatch(true);
+      renderAll();
+      showToast(batchUser + ' 已儲存 ' + changes.length + ' 格調整');
+    })
+    .catch(function(e) {
+      console.error('批量儲存失敗', e);
+      showToast('儲存失敗，變更還在，請再按一次儲存');
+    })
+    .then(function() { btn.disabled = false; btn.textContent = '💾 儲存全部'; });
+}
+
 function closeModal(){document.getElementById('editModal').classList.remove('active');editingCell=null;}
 document.getElementById('editModal').addEventListener('click',function(e){if(e.target===this)closeModal();});
 document.getElementById('reviewModal').addEventListener('click',function(e){if(e.target===this)closeReview();});
 document.getElementById('saveScopeModal').addEventListener('click',function(e){if(e.target===this){this.classList.remove('active');window._pendingSave=null;}});
 document.getElementById('historyModal').addEventListener('click',function(e){if(e.target===this)closeHistory();});
 document.getElementById('historyAuthModal').addEventListener('click',function(e){if(e.target===this){this.classList.remove('active');}});
-document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeModal();closeReview();document.getElementById('saveScopeModal').classList.remove('active');closeHistory();document.getElementById('historyAuthModal').classList.remove('active');}});
+document.getElementById('batchAuthModal').addEventListener('click',function(e){if(e.target===this){this.classList.remove('active');}});
+document.getElementById('batchEditModal').addEventListener('click',function(e){if(e.target===this)closeBatchEdit();});
+document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeBatchEdit();document.getElementById('batchAuthModal').classList.remove('active');closeModal();closeReview();document.getElementById('saveScopeModal').classList.remove('active');closeHistory();document.getElementById('historyAuthModal').classList.remove('active');}});
 
 function showToast(msg){const t=document.createElement('div');t.textContent=msg;Object.assign(t.style,{position:'fixed',bottom:'24px',left:'50%',transform:'translateX(-50%)',background:'var(--text)',color:'#fff',padding:'10px 22px',borderRadius:'8px',fontSize:'13px',fontWeight:'500',boxShadow:'0 4px 16px rgba(0,0,0,.15)',zIndex:'9999',animation:'modalIn .2s ease',fontFamily:"'Noto Sans TC',sans-serif"});document.body.appendChild(t);setTimeout(()=>{t.style.opacity='0';t.style.transition='opacity .3s';setTimeout(()=>t.remove(),300);},3000);}
 
