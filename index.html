@@ -717,6 +717,7 @@ const PERSON_COLORS = {
   '真': { bg: '#cce4dc', border: '#96c8b8', text: '#386858' },
   '任': { bg: '#e6d2d0', border: '#cca8a4', text: '#704240' },
 };
+// 初版班表（2026 年初），僅供參考、已不再顯示；實際班表以雲端 template 為準
 const DEFAULT_DATA = {
   'early-一': { cut: [{name:'黑',note:'主要'}], print: [{name:'黑',note:''}] },
   'early-二': { cut: [{name:'黑',note:'主要'}], print: [{name:'黑',note:''}] },
@@ -778,26 +779,41 @@ function renderAll() {
   updateWeekLabel(); renderGrid(); renderMobile(); renderLegend(); updateTodayBtn(); applyFilter();
 }
 
+/* 上次從雲端載入的班表存在瀏覽器，開頁先顯示它（不再先閃出寫死的舊班表） */
+const CACHE_KEY = 'scheduleCache_v1';
+function readCache() {
+  try { return JSON.parse(localStorage.getItem(CACHE_KEY)); } catch (e) { return null; }
+}
+function writeCache(data) {
+  try { localStorage.setItem(CACHE_KEY, JSON.stringify(data)); } catch (e) {}
+}
+
 function loadData() {
-  // Show loading state
-  scheduleData = JSON.parse(JSON.stringify(DEFAULT_DATA));
-  overrides = {};
+  var cached = readCache();
+  if (cached && cached.template) {
+    scheduleData = cached.template;
+    overrides = cached.overrides || {};
+    pendingData = cached.pending || [];
+  } else {
+    scheduleData = {};
+    overrides = {};
+  }
   renderAll();
-  showToast('載入班表中...');
+  showToast(cached ? '更新班表中...' : '載入班表中...');
 
   fetch(API_URL + '?action=read')
     .then(function(r) { return r.json(); })
     .then(function(data) {
-      if (data.template && Object.keys(data.template).length > 0) {
-        scheduleData = data.template;
-      }
-      if (data.overrides) overrides = data.overrides;
-      if (data.pending) pendingData = data.pending;
+      if (data.error || !data.template) throw new Error(data.error || '回傳格式錯誤');
+      scheduleData = data.template;
+      overrides = data.overrides || {};
+      pendingData = data.pending || [];
+      writeCache({ template: scheduleData, overrides: overrides, pending: pendingData });
       renderAll();
     })
     .catch(function(e) {
-      console.error('載入失敗，使用本地預設', e);
-      showToast('無法連線雲端，使用本地預設資料');
+      console.error('載入失敗', e);
+      showToast(cached ? '無法連線雲端，目前顯示上次載入的班表' : '無法連線雲端，請重新整理');
     });
 }
 
