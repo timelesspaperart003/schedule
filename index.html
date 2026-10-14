@@ -510,8 +510,9 @@
     text-align: center; line-height: 1.2;
     border-right: 1px solid var(--border);
     border-bottom: 1px solid var(--border);
-    display: flex; align-items: center; justify-content: center;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
   }
+  .mw-time-sep { opacity: .6; line-height: 1; }
   .mw-cell {
     padding: 2px 1px; border-right: 1px solid var(--border);
     border-bottom: 1px solid var(--border);
@@ -592,8 +593,28 @@
   .batch-user { font-size: 12px; font-weight: 500; opacity: .8; margin-left: 6px; }
   .batch-actions { margin-left: auto; display: flex; align-items: center; gap: 8px; }
   .batch-count { font-size: 12px; background: rgba(255,255,255,.2); padding: 4px 10px; border-radius: 20px; }
-  .batch-hint { padding: 8px 24px; font-size: 12px; color: var(--text-muted); background: var(--surface); border-bottom: 1px solid var(--border); display: flex; gap: 14px; flex-wrap: wrap; align-items: center; }
-  .batch-hint .sw { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: -2px; margin-right: 4px; }
+  .batch-tools { padding: 10px 24px; background: var(--surface); border-bottom: 1px solid var(--border); font-size: 12px; }
+  .bt-modes { display: flex; gap: 6px; margin-bottom: 8px; }
+  .bt-mode, .bt-opt { font-family: inherit; font-size: 12px; font-weight: 600; padding: 5px 12px; border-radius: 16px; border: 1px solid var(--border); background: var(--surface); color: var(--text-secondary); cursor: pointer; }
+  .bt-mode.active { background: var(--text); border-color: var(--text); color: #fff; }
+  .bt-opt.active { background: var(--cut-primary); border-color: var(--cut-primary); color: #fff; }
+  .bt-opt[data-role="print"].active { background: var(--print-primary); border-color: var(--print-primary); }
+  .bt-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 6px; }
+  .bt-label { font-weight: 700; color: var(--text-secondary); min-width: 44px; }
+  .bt-name { flex: 0 0 120px; padding: 5px 10px; font-size: 13px; }
+  .bt-note { flex: 0 0 150px; padding: 5px 10px; font-size: 12px; }
+  .bt-date { flex: 0 0 140px; padding: 4px 8px; font-size: 12px; }
+  .bt-wd { padding: 4px 9px; }
+  .bt-chips { display: flex; gap: 5px; flex-wrap: wrap; }
+  .bt-chips .bchip.active { box-shadow: 0 0 0 2px var(--text); }
+  .bt-tip { color: var(--accent); font-weight: 600; margin-bottom: 0; }
+  .bt-tip.warn { color: var(--text-muted); font-weight: 400; }
+  .bt-legend { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; color: var(--text-muted); margin-top: 6px; }
+  .bt-legend .sw { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: -2px; margin-right: 4px; }
+  .batch-cal.add-mode .bday:not(.blank) { cursor: copy; }
+  .batch-cal.add-mode .bday:not(.blank):hover { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(154,141,184,.35); }
+  .batch-cal.add-mode .bslot { cursor: copy; }
+  .bday.has-pick .bday-head { background: #e9e2f3; }
   .batch-scroll { flex: 1; overflow: auto; padding: 14px 24px 40px; }
   .batch-cal { display: grid; grid-template-columns: repeat(7, minmax(150px, 1fr)); gap: 8px; min-width: 1080px; }
   .bcal-wd { text-align: center; font-size: 12px; font-weight: 600; color: var(--text-muted); padding: 2px 0; }
@@ -631,7 +652,7 @@
   #batchEditBody { max-height: 65vh; overflow-y: auto; }
   @media (max-width: 768px) {
     .batch-header { padding: 10px 14px; gap: 10px; }
-    .batch-hint { padding: 6px 14px; }
+    .batch-tools { padding: 8px 12px; }
     .batch-scroll { padding: 10px 12px 40px; }
     .batch-cal { grid-template-columns: 1fr; min-width: 0; }
     .bcal-wd, .bday.blank { display: none; }
@@ -657,7 +678,7 @@
     </div>
     <button class="btn-header" onclick="resetToDefault()" title="還原預設資料">↺ 還原</button>
     <button class="btn-header" onclick="loadData()" title="重新載入雲端資料">⟳ 同步</button>
-    <button class="btn-header" onclick="openBatchAuth()" title="整個月一次調整">🗓️ 批量調整</button>
+    <button class="btn-header" onclick="openBatch()" title="在月曆上一次新增多天的班">🗓️ 批量新增PT班表</button>
     <button class="btn-header" onclick="openHistoryAuth()" title="修改記錄">📋 記錄</button>
   </div>
 </header>
@@ -738,22 +759,10 @@
     <div class="scope-pw-error" id="historyPwError" style="display:none;">權限不足</div>
   </div>
 </div>
-<!-- Batch Auth Modal -->
-<div class="scope-overlay" id="batchAuthModal">
-  <div class="scope-modal">
-    <div class="scope-title">批量調整班表</div>
-    <div class="scope-desc">請輸入管理員或操作員密碼</div>
-    <div class="scope-pw-row">
-      <input type="password" class="scope-pw-input" id="batchPwInput" placeholder="密碼" autocomplete="off" onkeydown="if(event.key==='Enter')confirmBatchAuth()">
-      <button class="scope-pw-confirm" onclick="confirmBatchAuth()">確認</button>
-    </div>
-    <div class="scope-pw-error" id="batchPwError" style="display:none;">密碼錯誤或權限不足</div>
-  </div>
-</div>
 <!-- Batch Month Calendar -->
 <div class="batch-overlay" id="batchModal">
   <div class="batch-header">
-    <div class="batch-title">🗓️ 批量調整<span class="batch-user" id="batchUser"></span></div>
+    <div class="batch-title">🗓️ 批量新增PT班表</div>
     <div class="week-nav">
       <button onclick="batchChangeMonth(-1)" title="上個月">◀</button>
       <span class="week-label" id="batchMonthLabel" style="min-width:110px"></span>
@@ -765,10 +774,46 @@
       <button class="btn-header" id="batchSaveBtn" onclick="saveBatch()" style="background:rgba(255,255,255,.3);font-weight:700">💾 儲存全部</button>
     </div>
   </div>
-  <div class="batch-hint">
-    <span>點時段即可修改；「複製」一天後可「貼上」到其他天。可切換月份，最後一次儲存。</span>
-    <span><span class="sw" style="background:#fbefc9;border:1px solid #e6d28f"></span>尚未儲存</span>
-    <span><span class="sw" style="background:#efeaf5;border:1px solid #d6cce6"></span>已有臨時調整</span>
+  <div class="batch-tools">
+    <div class="bt-modes">
+      <button class="bt-mode" id="btModeAdd" onclick="batchSetMode('add')">➕ 點日期新增人員</button>
+      <button class="bt-mode" id="btModeEdit" onclick="batchSetMode('edit')">✏️ 逐格編輯</button>
+    </div>
+    <div class="bt-add" id="btAddPanel">
+      <div class="bt-row">
+        <span class="bt-label">① 人員</span>
+        <input class="form-input bt-name" id="btName" list="btNameList" placeholder="姓名" autocomplete="off" oninput="batchPickChanged()">
+        <datalist id="btNameList"></datalist>
+        <span id="btNameChips" class="bt-chips"></span>
+      </div>
+      <div class="bt-row">
+        <span class="bt-label">② 工作</span>
+        <button class="bt-opt" data-role="cut" onclick="batchPickRole('cut')">切割</button>
+        <button class="bt-opt" data-role="print" onclick="batchPickRole('print')">印+妙</button>
+        <span class="bt-label" style="margin-left:10px">備註</span>
+        <input class="form-input bt-note" id="btNote" placeholder="選填，例：到1400" autocomplete="off">
+      </div>
+      <div class="bt-row">
+        <span class="bt-label">③ 時段</span>
+        <span id="btSlots" class="bt-chips"></span>
+      </div>
+      <div class="bt-row">
+        <span class="bt-label">④ 期間</span>
+        <input type="date" class="form-input bt-date" id="btFrom">
+        <span>~</span>
+        <input type="date" class="form-input bt-date" id="btTo">
+        <span id="btWeekdays" class="bt-chips" style="margin-left:6px"></span>
+        <button class="btn btn-primary" onclick="batchApplyRange(false)">＋ 加入這段期間</button>
+        <button class="btn" onclick="batchApplyRange(true)">－ 從這段期間移除</button>
+      </div>
+      <div class="bt-row bt-tip" id="btTip"></div>
+    </div>
+    <div class="bt-legend">
+      <span><span class="sw" style="background:#fbefc9;border:1px solid #e6d28f"></span>尚未儲存</span>
+      <span><span class="sw" style="background:#efeaf5;border:1px solid #d6cce6"></span>已有臨時調整</span>
+      <span><span class="sw" style="background:#e9e2f3;border:1px solid #cdbfe0"></span>日期列變紫＝選的人已排在這些時段（點了會取消）</span>
+      <span>「複製」一天後可「貼上」到其他天；可切換月份，最後一次儲存。</span>
+    </div>
   </div>
   <div class="batch-scroll"><div class="batch-cal" id="batchCal"></div></div>
 </div>
@@ -1097,8 +1142,9 @@ function renderMobileWeek(dates, today) {
   }
 
   TIME_SLOTS.forEach(slot => {
-    const shortTime = slot.label.replace(':00','').replace(':30',':30');
-    h += `<div class="mw-time">${shortTime}</div>`;
+    // 顯示完整區間（開始 ~ 結束），開機沒有固定時間就只顯示「開機」
+    const range = slot.id === 'early' ? slot.label : `${slot.label}<span class="mw-time-sep">~</span>${slot.time}`;
+    h += `<div class="mw-time">${range}</div>`;
 
     DAYS.forEach((day, di) => {
       const templateKey = `${slot.id}-${day}`;
@@ -1218,11 +1264,15 @@ function openEdit(templateKey,timeLabel,day,dayIndex){
 function getPendingForCell(templateKey, dateKey) {
   var matches = [];
   for (var i = 0; i < pendingData.length; i++) {
-    if (pendingData[i].templateKey === templateKey || pendingData[i].dateKey === dateKey) {
-      matches.push(pendingData[i]);
-    }
+    if (pendingMatches(pendingData[i], templateKey, dateKey)) matches.push(pendingData[i]);
   }
   return matches;
+}
+
+// 「所有週」的待審核對應每週同一格；「僅這週」只對應那一天（不然批量送審會讓每週同一格都亮待審核）
+function pendingMatches(p, templateKey, dateKey) {
+  if (p.scope === '所有週') return p.templateKey === templateKey;
+  return p.dateKey ? p.dateKey === dateKey : p.templateKey === templateKey;
 }
 
 function openReview(templateKey, timeLabel, day, dayIndex, cellPendings, currentData) {
@@ -1346,6 +1396,9 @@ function saveEdit(){
 let pendingData = [];
 
 function showSaveScope(newData) {
+  window._batchSaving = false;
+  document.getElementById('scopeTitle').textContent = '儲存班表修改';
+  document.querySelector('#scopeStep2 .scope-btn-back').style.display = '';
   document.getElementById('saveScopeModal').classList.add('active');
   window._pendingSave = newData;
   window._pendingScope = null;
@@ -1470,7 +1523,7 @@ function renderPendingList() {
     h += '<div class="pending-card-header"><div class="log-meta" style="margin:0">';
     h += '<span class="log-user">' + p.user + '</span>';
     h += '<span class="log-scope ' + (p.scope === '所有週' ? 'all' : 'this') + '">' + p.scope + '</span>';
-    h += '<span class="log-key">' + p.templateKey + '</span>';
+    h += '<span class="log-key">' + (p.scope !== '所有週' && p.dateKey ? p.dateKey : p.templateKey) + '</span>';
     if (p.timestamp) h += '<span class="log-time">' + p.timestamp + '</span>';
     h += '</div></div>';
     h += '<div class="log-compare" style="margin:10px 0">';
@@ -1578,12 +1631,13 @@ function formatLogContent(text) {
 
 function hasPending(templateKey, dateKey) {
   for (var i = 0; i < pendingData.length; i++) {
-    if (pendingData[i].templateKey === templateKey || pendingData[i].dateKey === dateKey) return true;
+    if (pendingMatches(pendingData[i], templateKey, dateKey)) return true;
   }
   return false;
 }
 
 function confirmSaveScope(scope, userName, isAdmin) {
+  if (window._batchSaving) { window._batchSaving = false; batchCommit(userName, isAdmin); return; }
   var newData = window._pendingSave;
   var cellKey = window._pendingSaveCell;
   var dateKey = window._pendingSaveDateKey;
@@ -1617,11 +1671,12 @@ function confirmSaveScope(scope, userName, isAdmin) {
   window._pendingSave = null; window._pendingSaveCell = null; window._pendingSaveDateKey = null;
 }
 
-/* ─── 批量調整（整月月曆）───
- * 編輯中的變更先放在 batchDraft（dateKey → 該格變更後的內容），按「儲存全部」才一次送到 GAS。
- * 跟固定班表（所有週）相同的格子不存臨時調整、會刪掉原有的臨時調整；清空的格子存成空的臨時調整。
- * 只有管理員/操作員能用；原本的單格編輯、員工送審流程不變。 */
-var batchUser = null, batchMonth = null, batchDraft = {}, batchClip = null, batchEditing = null;
+/* ─── 批量新增PT班表（整月月曆）───
+ * 編輯中的變更先放在 batchDraft（dateKey → 該格變更後的內容），按「儲存全部」才送出。
+ * 儲存時沿用原本的身分視窗：輸入密碼 → 直接生效（saveOverridesBatch）；選員工名字 → 每格各一筆待審核（submitPendingBatch）。
+ * 跟固定班表（所有週）相同的格子不存臨時調整、會刪掉原有的臨時調整；清空的格子存成空的臨時調整。 */
+var batchMonth = null, batchDraft = {}, batchClip = null, batchEditing = null;
+var batchMode = 'add', batchPick = { role: 'cut', slots: {}, weekdays: { 0: 1, 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1 } };
 
 function batchEsc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function(c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
 function batchClone(d) { return d ? JSON.parse(JSON.stringify(d)) : null; }
@@ -1645,34 +1700,132 @@ function batchSetDraft(dk, data) {
 }
 function batchDayLabel(date) { return (date.getMonth() + 1) + '/' + date.getDate() + '(週' + DAYS[batchDayIdx(date)] + ')'; }
 
-function openBatchAuth() {
-  document.getElementById('batchAuthModal').classList.add('active');
-  document.getElementById('batchPwInput').value = '';
-  document.getElementById('batchPwError').style.display = 'none';
-  setTimeout(function(){ document.getElementById('batchPwInput').focus(); }, 50);
-}
-
-function confirmBatchAuth() {
-  var input = document.getElementById('batchPwInput').value;
-  if (!input) return;
-  sha256(input).then(function(hash) {
-    var matched = null;
-    for (var i = 0; i < ADMINS.length; i++) { if (ADMINS[i].hash === hash) { matched = ADMINS[i].name; break; } }
-    if (!matched) { document.getElementById('batchPwError').style.display = 'block'; document.getElementById('batchPwInput').value = ''; return; }
-    document.getElementById('batchAuthModal').classList.remove('active');
-    batchUser = matched;
-    openBatch();
-  });
-}
-
 function openBatch() {
   var now = new Date();
   batchMonth = new Date(now.getFullYear(), now.getMonth(), 1);
   batchDraft = {}; batchClip = null;
-  document.getElementById('batchUser').textContent = '｜' + batchUser;
   document.getElementById('batchModal').classList.add('active');
   document.body.style.overflow = 'hidden';
+  renderBatchTools();
+  batchSetMode('add');
+}
+
+/* ── 「點日期新增人員」模式：選好人員/工作/時段，點日期就加入，再點一次取消 ── */
+function batchSetMode(mode) {
+  batchMode = mode;
+  document.getElementById('btModeAdd').classList.toggle('active', mode === 'add');
+  document.getElementById('btModeEdit').classList.toggle('active', mode === 'edit');
+  document.getElementById('btAddPanel').style.display = mode === 'add' ? '' : 'none';
+  batchPickChanged();
+}
+
+function renderBatchTools() {
+  var names = batchKnownNames();
+  document.getElementById('btNameList').innerHTML = names.map(function(n) { return '<option value="' + batchEsc(n) + '">'; }).join('');
+  document.getElementById('btNameChips').innerHTML = names.map(function(n) {
+    var e = batchEsc(n);
+    return '<button class="bchip" data-name="' + e + '" style="' + ps(n) + '" onclick="batchPickName(this.dataset.name)">' + e + '</button>';
+  }).join('');
+  document.getElementById('btSlots').innerHTML = TIME_SLOTS.map(function(s) {
+    return '<button class="bt-opt" data-slot="' + s.id + '" onclick="batchPickSlot(\'' + s.id + '\')">' +
+      (s.id === 'early' ? '開機' : s.label + '~' + s.time) + '</button>';
+  }).join('');
+  document.getElementById('btWeekdays').innerHTML = DAYS.map(function(d, i) {
+    return '<button class="bt-opt bt-wd" data-wd="' + i + '" onclick="batchPickWeekday(' + i + ')">' + d + '</button>';
+  }).join('');
+  // 期間預設：今天 ~ 本月底
+  var now = new Date();
+  document.getElementById('btFrom').value = dateStr(now);
+  document.getElementById('btTo').value = dateStr(new Date(now.getFullYear(), now.getMonth() + 1, 0));
+}
+
+function batchPickWeekday(i) { if (batchPick.weekdays[i]) delete batchPick.weekdays[i]; else batchPick.weekdays[i] = 1; batchPickChanged(); }
+
+// 把目前選的人員/工作/時段/備註，套用到期間內勾選的星期（remove=true 則從這段期間移除）
+function batchApplyRange(remove) {
+  if (!batchPickName_()) { showToast('請先選人員'); return; }
+  if (!Object.keys(batchPick.slots).length) { showToast('請先選時段'); return; }
+  if (!Object.keys(batchPick.weekdays).length) { showToast('請至少勾一個星期'); return; }
+  var f = document.getElementById('btFrom').value, t = document.getElementById('btTo').value;
+  if (!f || !t) { showToast('請選開始和結束日期'); return; }
+  var from = batchKeyParts(f + '_x').date, to = batchKeyParts(t + '_x').date;
+  if (from > to) { showToast('開始日期不能晚於結束日期'); return; }
+  if ((to - from) / 86400000 > 120) { showToast('一次最多套用 120 天'); return; }
+  var count = 0;
+  for (var d = new Date(from); d <= to; d.setDate(d.getDate() + 1)) {
+    if (!batchPick.weekdays[batchDayIdx(d)]) continue;
+    batchApplyDay(dateStr(d), remove);
+    count++;
+  }
+  batchMonth = new Date(from.getFullYear(), from.getMonth(), 1);
   renderBatch();
+  showToast(!count ? '這段期間沒有勾選的星期' : (remove ? '已從 ' + count + ' 天移除' : '已加入 ' + count + ' 天') + '（尚未儲存）');
+}
+
+function batchPickName(name) { document.getElementById('btName').value = name; batchPickChanged(); }
+function batchPickRole(role) { batchPick.role = role; batchPickChanged(); }
+function batchPickSlot(id) { if (batchPick.slots[id]) delete batchPick.slots[id]; else batchPick.slots[id] = 1; batchPickChanged(); }
+function batchPickName_() { return document.getElementById('btName').value.trim(); }
+function batchPickReady() { return batchMode === 'add' && batchPickName_() && Object.keys(batchPick.slots).length > 0; }
+
+function batchPickChanged() {
+  var name = batchPickName_();
+  document.querySelectorAll('#btNameChips .bchip').forEach(function(b) { b.classList.toggle('active', b.dataset.name === name); });
+  document.querySelectorAll('.bt-opt[data-role]').forEach(function(b) { b.classList.toggle('active', b.dataset.role === batchPick.role); });
+  document.querySelectorAll('.bt-opt[data-slot]').forEach(function(b) { b.classList.toggle('active', !!batchPick.slots[b.dataset.slot]); });
+  document.querySelectorAll('.bt-opt[data-wd]').forEach(function(b) { b.classList.toggle('active', !!batchPick.weekdays[b.dataset.wd]); });
+  var tip = document.getElementById('btTip');
+  if (batchPickReady()) {
+    tip.className = 'bt-row bt-tip';
+    tip.textContent = '👉 點月曆上的日期，把「' + name + '」加入' + (batchPick.role === 'cut' ? '切割' : '印+妙') + '（再點一次取消）';
+  } else {
+    tip.className = 'bt-row bt-tip warn';
+    tip.textContent = !name ? '先選或輸入人員' : '再選至少一個時段';
+  }
+  if (batchMonth) renderBatch();
+}
+
+// 該天選定的時段裡，這個人是否都已排在該工作
+function batchDayHasPick(ds) {
+  var name = batchPickName_(), slots = Object.keys(batchPick.slots);
+  if (!name || !slots.length) return false;
+  return slots.every(function(s) {
+    var cd = batchEff(ds + '_' + s);
+    return ((cd && cd[batchPick.role]) || []).some(function(p) { return p.name === name; });
+  });
+}
+
+// 點日期：沒排就加入、已排就取消
+function batchToggleDay(ds) {
+  batchApplyDay(ds, batchDayHasPick(ds));
+  renderBatch();
+}
+
+// 在某天選定的時段加入（或移除）選定的人；已在名單上的人加入時只更新備註
+function batchApplyDay(ds, remove) {
+  var name = batchPickName_(), note = document.getElementById('btNote').value.trim(), role = batchPick.role;
+  Object.keys(batchPick.slots).forEach(function(s) {
+    var dk = ds + '_' + s;
+    var cd = batchClone(batchEff(dk)) || { cut: [], print: [] };
+    cd.cut = cd.cut || []; cd.print = cd.print || [];
+    var i = cd[role].map(function(p) { return p.name; }).indexOf(name);
+    if (remove) { if (i >= 0) cd[role].splice(i, 1); }
+    else if (i >= 0) cd[role][i].note = note;
+    else cd[role].push({ name: name, note: note });
+    batchSetDraft(dk, cd);
+  });
+}
+
+function batchDayClick(ev, ds) {
+  if (batchMode !== 'add' || ev.target.closest('.bday-tools')) return;
+  ev.stopPropagation();
+  if (!batchPickReady()) { showToast(batchPickName_() ? '請先選時段' : '請先選人員'); return; }
+  batchToggleDay(ds);
+}
+
+function batchSlotClick(dk) {
+  if (batchMode === 'add') return;  // 新增模式由 batchDayClick 處理整天
+  openBatchSlot(dk);
 }
 
 function closeBatch(force) {
@@ -1718,7 +1871,8 @@ function renderBatch() {
   for (var i = 0; i < lead; i++) h += '<div class="bday blank"></div>';
   for (var d = 1; d <= days; d++) {
     var date = new Date(y, m, d), ds = dateStr(date);
-    h += '<div class="bday' + (ds === today ? ' is-today' : '') + '">';
+    var picked = batchMode === 'add' && batchDayHasPick(ds);
+    h += '<div class="bday' + (ds === today ? ' is-today' : '') + (picked ? ' has-pick' : '') + '" onclick="batchDayClick(event,\'' + ds + '\')">';
     h += '<div class="bday-head"><span class="bday-date">' + (m + 1) + '/' + d + '</span><span class="bday-wd">週' + DAYS[batchDayIdx(date)] + '</span><span class="bday-tools">';
     h += '<button onclick="batchCopyDay(\'' + ds + '\')">複製</button>';
     if (batchClip && batchClip.from !== ds) h += '<button class="paste" onclick="batchPasteDay(\'' + ds + '\')">貼上</button>';
@@ -1726,13 +1880,15 @@ function renderBatch() {
     TIME_SLOTS.forEach(function(slot) {
       var dk = ds + '_' + slot.id;
       var cls = (dk in batchDraft) ? ' changed' : (overrides[dk] ? ' override' : '');
-      h += '<div class="bslot' + cls + '" onclick="openBatchSlot(\'' + dk + '\')">' +
+      h += '<div class="bslot' + cls + '" onclick="batchSlotClick(\'' + dk + '\')">' +
         '<span class="bslot-time">' + (slot.id === 'early' ? '開機' : slot.label) + '</span>' +
         '<span class="bslot-ppl">' + batchCellHTML(batchEff(dk)) + '</span></div>';
     });
     h += '</div>';
   }
-  document.getElementById('batchCal').innerHTML = h;
+  var cal = document.getElementById('batchCal');
+  cal.innerHTML = h;
+  cal.classList.toggle('add-mode', batchMode === 'add');
   var n = Object.keys(batchDraft).length;
   document.getElementById('batchCount').textContent = n ? n + ' 格待儲存' : '尚無變更';
 }
@@ -1819,29 +1975,49 @@ function batchEditRevert() {
   closeBatchEdit(); renderBatch();
 }
 
+// 按「儲存全部」→ 跳出原本的身分視窗（跳過「僅這週／所有週」那步，批量一律是指定日期）
 function saveBatch() {
+  var n = Object.keys(batchDraft).length;
+  if (!n) { showToast('沒有需要儲存的變更'); return; }
+  chooseSaveScope('this');
+  window._batchSaving = true;
+  document.getElementById('scopeTitle').textContent = '儲存批量班表（' + n + ' 格）';
+  document.getElementById('scopeStepDesc').textContent = '確認身份：密碼直接生效，選員工則送審核';
+  document.querySelector('#scopeStep2 .scope-btn-back').style.display = 'none';
+  document.getElementById('saveScopeModal').classList.add('active');
+}
+
+function batchCommit(userName, isAdmin) {
   var keys = Object.keys(batchDraft).sort();
-  if (!keys.length) { showToast('沒有需要儲存的變更'); return; }
   var changes = keys.map(function(dk) {
     var next = batchDraft[dk];
-    var tmpl = scheduleData[batchKeyParts(dk).tk] || null;
+    var kp = batchKeyParts(dk);
+    var tmpl = scheduleData[kp.tk] || null;
     return {
       dateKey: dk,
-      data: batchSame(next, tmpl) ? null : { cut: next.cut || [], print: next.print || [] },  // null = 刪除臨時調整、回到固定班表
+      templateKey: kp.tk,
+      // 直接生效時：跟固定班表一樣就刪掉臨時調整（null）；送審核時存實際內容，審核頁才看得懂
+      data: (isAdmin && batchSame(next, tmpl)) ? null : { cut: next.cut || [], print: next.print || [] },
       oldData: batchCurrent(dk),
       newData: next
     };
   });
   var btn = document.getElementById('batchSaveBtn');
-  btn.disabled = true; btn.textContent = '儲存中...';
-  apiPost({ action: 'saveOverridesBatch', user: batchUser, changes: changes })
+  btn.disabled = true; btn.textContent = isAdmin ? '儲存中...' : '提交中...';
+  apiPost({ action: isAdmin ? 'saveOverridesBatch' : 'submitPendingBatch', user: userName, changes: changes })
     .then(function(resp) {
       if (!resp || !resp.success) throw new Error((resp && resp.error) || '儲存失敗');
-      changes.forEach(function(c) { if (c.data) overrides[c.dateKey] = c.data; else delete overrides[c.dateKey]; });
+      if (isAdmin) {
+        changes.forEach(function(c) { if (c.data) overrides[c.dateKey] = c.data; else delete overrides[c.dateKey]; });
+      } else {
+        changes.forEach(function(c, i) {
+          pendingData.push({ id: (resp.ids || [])[i], user: userName, scope: '僅這週', templateKey: c.templateKey, dateKey: c.dateKey, data: c.data, oldData: c.oldData });
+        });
+      }
       writeCache({ template: scheduleData, overrides: overrides, pending: pendingData });
       closeBatch(true);
       renderAll();
-      showToast(batchUser + ' 已儲存 ' + changes.length + ' 格調整');
+      showToast(isAdmin ? userName + ' 已儲存 ' + changes.length + ' 格班表' : userName + ' 已提交 ' + changes.length + ' 格，待審核');
     })
     .catch(function(e) {
       console.error('批量儲存失敗', e);
@@ -1856,9 +2032,8 @@ document.getElementById('reviewModal').addEventListener('click',function(e){if(e
 document.getElementById('saveScopeModal').addEventListener('click',function(e){if(e.target===this){this.classList.remove('active');window._pendingSave=null;}});
 document.getElementById('historyModal').addEventListener('click',function(e){if(e.target===this)closeHistory();});
 document.getElementById('historyAuthModal').addEventListener('click',function(e){if(e.target===this){this.classList.remove('active');}});
-document.getElementById('batchAuthModal').addEventListener('click',function(e){if(e.target===this){this.classList.remove('active');}});
 document.getElementById('batchEditModal').addEventListener('click',function(e){if(e.target===this)closeBatchEdit();});
-document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeBatchEdit();document.getElementById('batchAuthModal').classList.remove('active');closeModal();closeReview();document.getElementById('saveScopeModal').classList.remove('active');closeHistory();document.getElementById('historyAuthModal').classList.remove('active');}});
+document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeBatchEdit();closeModal();closeReview();document.getElementById('saveScopeModal').classList.remove('active');closeHistory();document.getElementById('historyAuthModal').classList.remove('active');}});
 
 function showToast(msg){const t=document.createElement('div');t.textContent=msg;Object.assign(t.style,{position:'fixed',bottom:'24px',left:'50%',transform:'translateX(-50%)',background:'var(--text)',color:'#fff',padding:'10px 22px',borderRadius:'8px',fontSize:'13px',fontWeight:'500',boxShadow:'0 4px 16px rgba(0,0,0,.15)',zIndex:'9999',animation:'modalIn .2s ease',fontFamily:"'Noto Sans TC',sans-serif"});document.body.appendChild(t);setTimeout(()=>{t.style.opacity='0';t.style.transition='opacity .3s';setTimeout(()=>t.remove(),300);},3000);}
 
