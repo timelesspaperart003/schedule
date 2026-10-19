@@ -725,7 +725,7 @@
           <span class="scope-icon">📅</span>僅這週
         </button>
         <button class="scope-btn scope-all" onclick="chooseSaveScope('all')">
-          <span class="scope-icon">🔄</span>所有週（更新模板）
+          <span class="scope-icon">🔄</span>這天之後的所有週
         </button>
       </div>
     </div>
@@ -986,6 +986,36 @@ function saveOverrideToCloud(dateKey, data) {
 
 function deleteOverrideFromCloud(dateKey) {
   return apiPost({ action: 'deleteOverride', dateKey: dateKey });
+}
+
+/* 「所有週」改固定班表前，把被改日期之前的同一格（同時段、同星期）用舊固定班表存成臨時調整，
+ * 讓過去的週保持原樣。已有臨時調整的日期不動。從系統開始使用那週算起。 */
+const FREEZE_FROM = '2026-04-06';
+function freezePastWeeks(templateKey, dateKey, user) {
+  var kp = batchKeyParts(dateKey);
+  var tmpl = scheduleData[templateKey] || null;
+  var frozen = tmpl ? batchClone(tmpl) : { cut: [], print: [] };
+  var p = FREEZE_FROM.split('-');
+  var d = new Date(+p[0], +p[1] - 1, +p[2], 12);
+  while (batchDayIdx(d) !== batchDayIdx(kp.date)) d.setDate(d.getDate() + 1);
+  var changes = [];
+  for (; dateStr(d) < dateStr(kp.date); d.setDate(d.getDate() + 7)) {
+    var dk = dateStr(d) + '_' + kp.slot;
+    if (overrides[dk]) continue;
+    changes.push({ dateKey: dk, templateKey: templateKey, data: batchClone(frozen), oldData: tmpl, newData: frozen });
+  }
+  if (!changes.length) return Promise.resolve();
+  return apiPost({ action: 'saveOverridesBatch', user: user, changes: changes }).then(function(resp) {
+    if (!resp || !resp.success) throw new Error((resp && resp.error) || '保留過去週失敗');
+    changes.forEach(function(c) { overrides[c.dateKey] = c.data; });
+  });
+}
+
+/* 批准「所有週」的待審核前先保留過去的週 */
+function approvePendingWithFreeze(pendingId, approver) {
+  var p = pendingData.filter(function(x) { return x.id === pendingId; })[0];
+  var pre = (p && p.scope === '所有週' && p.dateKey) ? freezePastWeeks(p.templateKey, p.dateKey, approver) : Promise.resolve();
+  return pre.then(function() { return apiPost({ action: 'approvePending', id: pendingId, approver: approver }); });
 }
 
 function resetToDefault() {
@@ -1344,7 +1374,7 @@ function reviewAction(pendingId, idx, action) {
     errEl.style.display = 'none';
     if (action === 'approve') {
       showToast('批准中...');
-      apiPost({ action: 'approvePending', id: pendingId, approver: approver })
+      approvePendingWithFreeze(pendingId, approver)
         .then(function(resp) {
           if (resp.success) { pendingData = pendingData.filter(function(p){ return p.id !== pendingId; }); closeReview(); loadData(); showToast(approver + ' 已批准'); }
         }).catch(function() { showToast('操作失敗'); });
@@ -1576,7 +1606,7 @@ function pendingAction(pendingId, idx, action) {
 
     if (action === 'approve') {
       showToast('批准中...');
-      apiPost({ action: 'approvePending', id: pendingId, approver: approver })
+      approvePendingWithFreeze(pendingId, approver)
         .then(function(resp) {
           if (resp.success) { pendingData = pendingData.filter(function(p){ return p.id !== pendingId; }); updatePendingCount(); renderPendingList(); loadData(); showToast(approver + ' 已批准'); }
         }).catch(function() { showToast('操作失敗'); });
@@ -1650,10 +1680,15 @@ function confirmSaveScope(scope, userName, isAdmin) {
 
   if (isAdmin) {
     if (scope === 'all') {
-      if (newData) scheduleData[cellKey] = newData; else delete scheduleData[cellKey];
-      delete overrides[dateKey]; renderAll(); showToast('儲存中...');
-      Promise.all([ apiPost({ action: 'saveTemplate', key: cellKey, data: newData, oldData: oldData, user: userName }), deleteOverrideFromCloud(dateKey) ])
-        .then(function() { showToast(userName + ' 已更新所有週模板'); }).catch(function() { showToast('儲存失敗'); });
+      showToast('儲存中...');
+      // 先保留過去的週（用舊固定班表存成臨時調整），成功後才改固定班表，避免過去的週被改到
+      freezePastWeeks(cellKey, dateKey, userName)
+        .then(function() {
+          if (newData) scheduleData[cellKey] = newData; else delete scheduleData[cellKey];
+          delete overrides[dateKey]; renderAll();
+          return Promise.all([ apiPost({ action: 'saveTemplate', key: cellKey, data: newData, oldData: oldData, user: userName }), deleteOverrideFromCloud(dateKey) ]);
+        })
+        .then(function() { showToast(userName + ' 已更新這天之後的所有週'); }).catch(function() { renderAll(); showToast('儲存失敗'); });
     } else {
       if (newData) overrides[dateKey] = newData; else delete overrides[dateKey];
       renderAll(); showToast('儲存中...');
