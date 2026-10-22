@@ -679,6 +679,7 @@
     <button class="btn-header" onclick="resetToDefault()" title="還原預設資料">↺ 還原</button>
     <button class="btn-header" onclick="loadData()" title="重新載入雲端資料">⟳ 同步</button>
     <button class="btn-header" onclick="openBatch()" title="在月曆上一次新增多天的班">🗓️ 批量新增PT班表</button>
+    <button class="btn-header" onclick="openStaffLeave()" title="設定人員從某天起不再排班，之前的班表不受影響">👋 人員異動</button>
     <button class="btn-header" onclick="openHistoryAuth()" title="修改記錄">📋 記錄</button>
   </div>
 </header>
@@ -757,6 +758,28 @@
       <button class="scope-pw-confirm" onclick="confirmHistoryAuth()">確認</button>
     </div>
     <div class="scope-pw-error" id="historyPwError" style="display:none;">權限不足</div>
+  </div>
+</div>
+<!-- Staff Leave Modal -->
+<div class="scope-overlay" id="staffLeaveModal">
+  <div class="scope-modal">
+    <div class="scope-title">👋 人員異動</div>
+    <div class="scope-desc">設定這個人從某天起不再排進固定班表，<b>之前的週次班表會保留原樣</b>（含已經過去的每一週），不會被回溯修改。</div>
+    <div class="fg" style="margin:14px 0 10px">
+      <label style="display:block;font-size:12px;color:#888;margin-bottom:4px">姓名</label>
+      <input type="text" class="form-input" id="slName" list="slNameList" placeholder="選擇或輸入姓名" autocomplete="off" style="width:100%">
+      <datalist id="slNameList"></datalist>
+    </div>
+    <div class="fg" style="margin-bottom:10px">
+      <label style="display:block;font-size:12px;color:#888;margin-bottom:4px">離職生效日（含當天起不再排班）</label>
+      <input type="date" class="form-input" id="slDate" style="width:100%">
+    </div>
+    <div class="scope-pw-row">
+      <input type="password" class="scope-pw-input" id="slPwInput" placeholder="管理員密碼" autocomplete="off" onkeydown="if(event.key==='Enter')confirmStaffLeave()">
+      <button class="scope-pw-confirm" onclick="confirmStaffLeave()">確認</button>
+    </div>
+    <div class="scope-pw-error" id="slError" style="display:none;"></div>
+    <button class="scope-btn-back" onclick="closeStaffLeave()">← 取消</button>
   </div>
 </div>
 <!-- Batch Month Calendar -->
@@ -1517,6 +1540,46 @@ function confirmHistoryAuth() {
     for (var i = 0; i < ADMINS.length; i++) { if (ADMINS[i].hash === hash) { ok = true; break; } }
     if (ok) { document.getElementById('historyAuthModal').classList.remove('active'); openHistory(); }
     else { document.getElementById('historyPwError').style.display = 'block'; document.getElementById('historyPwInput').value = ''; }
+  });
+}
+
+/* ─── 人員異動：設定某人從某天起不再排進固定班表，之前的週次保留原樣 ─── */
+function openStaffLeave() {
+  document.getElementById('slNameList').innerHTML = batchKnownNames().map(function(n) { return '<option value="' + batchEsc(n) + '">'; }).join('');
+  document.getElementById('slName').value = '';
+  document.getElementById('slDate').value = dateStr(new Date());
+  document.getElementById('slPwInput').value = '';
+  document.getElementById('slError').style.display = 'none';
+  document.getElementById('staffLeaveModal').classList.add('active');
+  setTimeout(function(){ document.getElementById('slName').focus(); }, 50);
+}
+
+function closeStaffLeave() {
+  document.getElementById('staffLeaveModal').classList.remove('active');
+}
+
+function confirmStaffLeave() {
+  var name = document.getElementById('slName').value.trim();
+  var eDate = document.getElementById('slDate').value;
+  var pw = document.getElementById('slPwInput').value;
+  var errEl = document.getElementById('slError');
+  errEl.style.display = 'none';
+  if (!name) { errEl.textContent = '請輸入姓名'; errEl.style.display = 'block'; return; }
+  if (!eDate) { errEl.textContent = '請選擇生效日'; errEl.style.display = 'block'; return; }
+  sha256(pw).then(function(hash) {
+    var matched = null;
+    for (var i = 0; i < ADMINS.length; i++) { if (ADMINS[i].hash === hash) { matched = ADMINS[i].name; break; } }
+    if (!matched) { errEl.textContent = '密碼錯誤'; errEl.style.display = 'block'; document.getElementById('slPwInput').value = ''; return; }
+    document.getElementById('staffLeaveModal').classList.remove('active');
+    showToast('處理中...');
+    apiPost({ action: 'removeStaffFromTemplate', name: name, effectiveDate: eDate, user: matched })
+      .then(function(resp) {
+        if (!resp || !resp.success) { showToast('設定失敗：' + ((resp && resp.error) || '未知錯誤')); return; }
+        if (resp.count === 0) { showToast(name + ' 目前沒有排在固定班表或未來臨時調整裡，沒有可調整的項目'); return; }
+        showToast('已設定 ' + name + ' 自 ' + eDate + ' 起不再排班（共調整 ' + resp.count + ' 格，之前週次已保留）');
+        loadData();
+      })
+      .catch(function() { showToast('設定失敗，請重試'); });
   });
 }
 
