@@ -1387,11 +1387,7 @@ function reviewAction(pendingId, idx, action) {
   var pw = pwInput.value;
   if (!pw) { errEl.style.display = 'block'; errEl.textContent = '請輸入密碼'; return; }
 
-  sha256(pw).then(function(hash) {
-    var approver = null;
-    for (var i = 0; i < ADMINS.length; i++) {
-      if (ADMINS[i].hash === hash) { approver = ADMINS[i].name; break; }
-    }
+  checkAdminPassword(pw).then(function(approver) {
     if (!approver) { errEl.style.display = 'block'; errEl.textContent = '密碼錯誤或權限不足'; pwInput.value = ''; return; }
 
     errEl.style.display = 'none';
@@ -1484,25 +1480,19 @@ function backToStep1() {
   document.getElementById('scopeStepDesc').textContent = '選擇修改範圍';
 }
 
-var ADMINS = [
-  { name: '管理員', hash: '2eef75362c5d08a31384dedf71617445c31969f405ad2d554da73ad6fc5fe327' },
-  { name: '安汝', hash: '6e110f529869586eaeb5839280b75ff1bbb90d7dc9c9410c2ad4c9bec1d9a866' },
-  { name: '小尤', hash: 'f2a5cec9c8580cea2119fe434ace37d925b629e636073d79bc22661a97382c28' }
-];
-
-function sha256(msg) {
-  return crypto.subtle.digest('SHA-256', new TextEncoder().encode(msg))
-    .then(function(buf) { return Array.from(new Uint8Array(buf)).map(function(b){ return b.toString(16).padStart(2,'0'); }).join(''); });
+/* 2026-11-02：密碼驗證改成問後端（GAS），前端不再存任何密碼或雜湊值——
+ * 之前存 SHA-256 雜湊在這裡，repo 公開後等於密碼直接曝光，離線破解很快。
+ * 現在只把使用者輸入的密碼送到後端比對，前端完全看不到、也猜不到正確答案。 */
+function checkAdminPassword(pw) {
+  return apiPost({ action: 'checkAdminPassword', password: pw })
+    .then(function(resp) { return (resp && resp.ok) ? resp.name : null; })
+    .catch(function() { return null; });
 }
 
 function confirmWithPassword() {
   var input = document.getElementById('scopePwInput').value;
   if (!input) return;
-  sha256(input).then(function(hash) {
-    var matched = null;
-    for (var i = 0; i < ADMINS.length; i++) {
-      if (ADMINS[i].hash === hash) { matched = ADMINS[i].name; break; }
-    }
+  checkAdminPassword(input).then(function(matched) {
     if (matched) {
       document.getElementById('saveScopeModal').classList.remove('active');
       confirmSaveScope(window._pendingScope, matched, true);
@@ -1535,10 +1525,8 @@ function openHistoryAuth() {
 
 function confirmHistoryAuth() {
   var input = document.getElementById('historyPwInput').value;
-  sha256(input).then(function(hash) {
-    var ok = false;
-    for (var i = 0; i < ADMINS.length; i++) { if (ADMINS[i].hash === hash) { ok = true; break; } }
-    if (ok) { document.getElementById('historyAuthModal').classList.remove('active'); openHistory(); }
+  checkAdminPassword(input).then(function(matched) {
+    if (matched) { document.getElementById('historyAuthModal').classList.remove('active'); openHistory(); }
     else { document.getElementById('historyPwError').style.display = 'block'; document.getElementById('historyPwInput').value = ''; }
   });
 }
@@ -1566,9 +1554,7 @@ function confirmStaffLeave() {
   errEl.style.display = 'none';
   if (!name) { errEl.textContent = '請輸入姓名'; errEl.style.display = 'block'; return; }
   if (!eDate) { errEl.textContent = '請選擇生效日'; errEl.style.display = 'block'; return; }
-  sha256(pw).then(function(hash) {
-    var matched = null;
-    for (var i = 0; i < ADMINS.length; i++) { if (ADMINS[i].hash === hash) { matched = ADMINS[i].name; break; } }
+  checkAdminPassword(pw).then(function(matched) {
     if (!matched) { errEl.textContent = '密碼錯誤'; errEl.style.display = 'block'; document.getElementById('slPwInput').value = ''; return; }
     document.getElementById('staffLeaveModal').classList.remove('active');
     showToast('處理中...');
@@ -1659,11 +1645,7 @@ function pendingAction(pendingId, idx, action) {
   var pw = pwInput.value;
   if (!pw) { errEl.style.display = 'block'; errEl.textContent = '請輸入密碼'; return; }
 
-  sha256(pw).then(function(hash) {
-    var approver = null;
-    for (var i = 0; i < ADMINS.length; i++) {
-      if (ADMINS[i].hash === hash) { approver = ADMINS[i].name; break; }
-    }
+  checkAdminPassword(pw).then(function(approver) {
     if (!approver) { errEl.style.display = 'block'; errEl.textContent = '密碼錯誤或權限不足'; pwInput.value = ''; return; }
     errEl.style.display = 'none';
 
